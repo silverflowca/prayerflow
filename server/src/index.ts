@@ -9,6 +9,7 @@ const DEEPGRAM_KEY = process.env.DEEPGRAM_API_KEY || ''
 
 const MUSIC_DIR = path.join(process.cwd(), 'music')
 const RECORDINGS_DIR = path.join(process.cwd(), 'data')
+const PUBLIC_DIR = path.join(process.cwd(), 'public')
 if (!fs.existsSync(RECORDINGS_DIR)) fs.mkdirSync(RECORDINGS_DIR, { recursive: true })
 
 const app = new Hono()
@@ -274,8 +275,48 @@ app.post('/api/transcripts/:filename', async (c) => {
   }
 })
 
+// ── Serve React client (static files + SPA fallback) ──────
+app.get('*', (c) => {
+  const reqPath = c.req.path
+
+  // Try to serve exact file from public dir
+  const filePath = path.join(PUBLIC_DIR, reqPath)
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const buf = fs.readFileSync(filePath)
+    const ext = path.extname(filePath).toLowerCase()
+    const mime: Record<string, string> = {
+      '.html': 'text/html',
+      '.js': 'application/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon',
+      '.woff': 'font/woff',
+      '.woff2': 'font/woff2',
+      '.ttf': 'font/ttf',
+    }
+    return new Response(buf, {
+      headers: { 'Content-Type': mime[ext] || 'application/octet-stream' },
+    })
+  }
+
+  // SPA fallback — serve index.html for all unmatched routes
+  const index = path.join(PUBLIC_DIR, 'index.html')
+  if (fs.existsSync(index)) {
+    return new Response(fs.readFileSync(index), {
+      headers: { 'Content-Type': 'text/html' },
+    })
+  }
+
+  return c.text('Not found', 404)
+})
+
 serve({ fetch: app.fetch, port: PORT }, () => {
   console.log(`PrayerFlow server  http://localhost:${PORT}`)
   console.log(`Music:      ${MUSIC_DIR}`)
   console.log(`Recordings: ${RECORDINGS_DIR}`)
+  console.log(`Client:     ${PUBLIC_DIR}`)
 })
