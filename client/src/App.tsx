@@ -103,6 +103,13 @@ function ThemeSelector() {
 
 type Tab = 'library' | 'studio' | 'recordings' | 'settings'
 
+const TABS: { id: Tab; icon: string; label: string }[] = [
+  { id: 'library',    icon: '🎵', label: 'Library' },
+  { id: 'studio',     icon: '🎙️', label: 'Studio'  },
+  { id: 'recordings', icon: '📼', label: 'Saved'   },
+  { id: 'settings',   icon: '⚙',  label: 'Settings'},
+]
+
 export default function App() {
   const [tab, setTab] = useState<Tab>('library')
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null)
@@ -119,14 +126,17 @@ export default function App() {
     setTab('studio')
   }
 
+  const navigate = (t: Tab) => { setLyricsFilename(null); setTab(t) }
+
   const topbarTitle = lyricsFilename ? '🎤 Lyrics'
     : tab === 'library'    ? '🎵 Music Library'
-    : tab === 'studio'     ? '🎙️ Recording Studio'
-    : tab === 'recordings' ? '📼 My Recordings'
+    : tab === 'studio'     ? '🎙️ Studio'
+    : tab === 'recordings' ? '📼 Recordings'
     : '⚙ Settings'
 
   return (
     <div className="app-shell">
+      {/* ── Desktop sidebar ── */}
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-logo">🙏</div>
@@ -137,13 +147,13 @@ export default function App() {
             <div className="nav-label">Workspace</div>
             <div
               className={`nav-item${tab === 'library' && !lyricsFilename ? ' active' : ''}`}
-              onClick={() => { setLyricsFilename(null); setTab('library') }}
+              onClick={() => navigate('library')}
             >
               <span className="icon">🎵</span> Music Library
             </div>
             <div
               className={`nav-item${tab === 'studio' && !lyricsFilename ? ' active' : ''}`}
-              onClick={() => { setLyricsFilename(null); setTab('studio') }}
+              onClick={() => navigate('studio')}
             >
               <span className="icon">🎙️</span> Studio
               {selectedTrack && (
@@ -154,7 +164,7 @@ export default function App() {
             </div>
             <div
               className={`nav-item${tab === 'recordings' && !lyricsFilename ? ' active' : ''}`}
-              onClick={() => { setLyricsFilename(null); setTab('recordings') }}
+              onClick={() => navigate('recordings')}
             >
               <span className="icon">📼</span> Recordings
             </div>
@@ -165,7 +175,7 @@ export default function App() {
             <div className="nav-label">App</div>
             <div
               className={`nav-item${tab === 'settings' && !lyricsFilename ? ' active' : ''}`}
-              onClick={() => { setLyricsFilename(null); setTab('settings') }}
+              onClick={() => navigate('settings')}
             >
               <span className="icon">⚙</span> Settings
               {settings.autoTranscribe && (
@@ -195,17 +205,20 @@ export default function App() {
         </nav>
       </aside>
 
+      {/* ── Main content ── */}
       <div className="main-area">
         <div className="topbar">
           <span className="topbar-title">{topbarTitle}</span>
-          {selectedTrack && tab !== 'settings' && !lyricsFilename && (
-            <span style={{ fontSize: 12, color: 'var(--cyan)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>●</span> {selectedTrack}
-            </span>
+          {lyricsFilename && (
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ marginLeft: 0 }}
+              onClick={() => setLyricsFilename(null)}
+            >← Back</button>
           )}
           {settings.autoTranscribe && tab === 'studio' && !lyricsFilename && (
-            <span style={{ fontSize: 11, color: 'var(--accent)', padding: '2px 8px', borderRadius: 4, background: 'rgba(122,162,247,.1)', border: '1px solid rgba(122,162,247,.2)' }}>
-              Auto-transcribe ON
+            <span style={{ fontSize: 11, color: 'var(--accent)', padding: '2px 8px', borderRadius: 4, background: 'rgba(122,162,247,.1)', border: '1px solid rgba(122,162,247,.2)', marginLeft: 'auto' }}>
+              Auto ON
             </span>
           )}
         </div>
@@ -229,6 +242,20 @@ export default function App() {
           }
         </div>
       </div>
+
+      {/* ── Mobile bottom tab bar ── */}
+      <nav className="bottom-nav">
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            className={`bottom-nav-item${tab === t.id && !lyricsFilename ? ' active' : ''}`}
+            onClick={() => navigate(t.id)}
+          >
+            <span className="bnav-icon">{t.icon}</span>
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   )
 }
