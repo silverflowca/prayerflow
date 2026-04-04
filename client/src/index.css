@@ -1,7 +1,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Tokyo Night palette (matches devflow) */
+  /* Default: Tokyo Night — overridden at runtime by ThemeContext */
   --bg:        #1a1b26;
   --surface:   #16161e;
   --surface2:  #24283b;
@@ -11,7 +11,7 @@
   --text-muted:#565f89;
   --accent:    #7aa2f7;
   --accent-2:  #5d7fdb;
-  --primary:   #eda685;   /* warm peach — devflow highlight */
+  --primary:   #eda685;
   --success:   #9ece6a;
   --warning:   #e0af68;
   --danger:    #f7768e;
@@ -20,6 +20,7 @@
   --orange:    #ff9e64;
   --red:       #f7768e;
   --green:     #9ece6a;
+  /* Layout & font (not theme-controlled) */
   --radius:    8px;
   --radius-lg: 12px;
   --font:      'JetBrains Mono', 'Fira Code', Consolas, monospace;
@@ -37,7 +38,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  color-scheme: dark;
+  color-scheme: light dark;  /* updated at runtime by ThemeContext */
 }
 
 /* ── Smooth theme transitions (from devflow) ─────────── */

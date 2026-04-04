@@ -31,6 +31,244 @@ interface Props {
   apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>
 }
 
+// ── 10 Lyric Display Styles ────────────────────────────────────────────────
+
+interface LyricStyle {
+  id: string
+  label: string
+  emoji: string
+  // Container
+  fontSize: number
+  lineHeight: number
+  fontFamily?: string
+  letterSpacing?: string
+  // Active word
+  activeColor: string
+  activeBg: string
+  activeFontWeight: number | string
+  activeTransform: string
+  activeTextDecoration?: string
+  activeAnimation?: string
+  activeFontStyle?: string
+  activeTextShadow?: string
+  // Past word
+  pastColor: string
+  pastFontWeight: number | string
+  pastTextDecoration?: string
+  pastOpacity?: number
+  // Future word
+  futureColor: string
+  futureFontWeight: number | string
+  futureOpacity?: number
+  // Line (active)
+  activeBorderLeft: string
+  activeLineBg: string
+}
+
+const LYRIC_STYLES: LyricStyle[] = [
+  {
+    id: 'classic',
+    label: 'Classic',
+    emoji: '✦',
+    fontSize: 18,
+    lineHeight: 1.9,
+    activeColor: '#fff',
+    activeBg: 'var(--accent)',
+    activeFontWeight: 700,
+    activeTransform: 'scale(1.08)',
+    pastColor: 'var(--text)',
+    pastFontWeight: 500,
+    futureColor: 'var(--text-muted)',
+    futureFontWeight: 400,
+    activeBorderLeft: '3px solid var(--accent)',
+    activeLineBg: 'rgba(122,162,247,.06)',
+  },
+  {
+    id: 'bold-glow',
+    label: 'Bold Glow',
+    emoji: '✨',
+    fontSize: 20,
+    lineHeight: 2.0,
+    fontFamily: "'Inter', system-ui, sans-serif",
+    activeColor: '#fff',
+    activeBg: 'transparent',
+    activeFontWeight: 900,
+    activeTransform: 'scale(1.1)',
+    activeTextShadow: '0 0 16px #7aa2f7, 0 0 32px rgba(122,162,247,0.5)',
+    activeTextDecoration: 'none',
+    pastColor: '#c0caf5',
+    pastFontWeight: 600,
+    futureColor: '#414868',
+    futureFontWeight: 400,
+    activeBorderLeft: '3px solid #7aa2f7',
+    activeLineBg: 'rgba(122,162,247,.04)',
+  },
+  {
+    id: 'underline',
+    label: 'Underline',
+    emoji: '⎁',
+    fontSize: 18,
+    lineHeight: 2.0,
+    activeColor: '#e0e4f0',
+    activeBg: 'transparent',
+    activeFontWeight: 700,
+    activeTransform: 'scale(1)',
+    activeTextDecoration: 'underline 3px #7aa2f7',
+    pastColor: '#c0caf5',
+    pastFontWeight: 500,
+    pastTextDecoration: 'underline 1px rgba(122,162,247,0.3)',
+    futureColor: 'var(--text-muted)',
+    futureFontWeight: 400,
+    activeBorderLeft: '3px solid transparent',
+    activeLineBg: 'transparent',
+  },
+  {
+    id: 'flowy',
+    label: 'Flowy',
+    emoji: '〜',
+    fontSize: 19,
+    lineHeight: 2.2,
+    fontFamily: "'Georgia', 'Times New Roman', serif",
+    letterSpacing: '0.01em',
+    activeColor: '#eda685',
+    activeBg: 'transparent',
+    activeFontWeight: 700,
+    activeTransform: 'scale(1.05)',
+    activeFontStyle: 'italic',
+    activeAnimation: 'flowy-wave 1s ease-in-out infinite',
+    pastColor: '#c0aaa0',
+    pastFontWeight: 400,
+    pastOpacity: 0.8,
+    futureColor: '#565f89',
+    futureFontWeight: 300,
+    activeBorderLeft: '3px solid #eda685',
+    activeLineBg: 'rgba(237,166,133,.05)',
+  },
+  {
+    id: 'neon',
+    label: 'Neon',
+    emoji: '⚡',
+    fontSize: 18,
+    lineHeight: 1.9,
+    fontFamily: "'JetBrains Mono', monospace",
+    letterSpacing: '0.05em',
+    activeColor: '#7dcfff',
+    activeBg: 'transparent',
+    activeFontWeight: 700,
+    activeTransform: 'scale(1.06)',
+    activeTextShadow: '0 0 8px #7dcfff, 0 0 20px rgba(125,207,255,0.6)',
+    pastColor: '#9ece6a',
+    pastFontWeight: 500,
+    pastTextDecoration: 'none',
+    futureColor: '#2f3354',
+    futureFontWeight: 400,
+    activeBorderLeft: '3px solid #7dcfff',
+    activeLineBg: 'rgba(125,207,255,.04)',
+  },
+  {
+    id: 'warm-highlight',
+    label: 'Warm Hi',
+    emoji: '🔆',
+    fontSize: 18,
+    lineHeight: 2.0,
+    activeColor: '#1a1b26',
+    activeBg: '#e0af68',
+    activeFontWeight: 800,
+    activeTransform: 'scale(1.05)',
+    pastColor: '#c0caf5',
+    pastFontWeight: 500,
+    futureColor: '#414868',
+    futureFontWeight: 400,
+    activeBorderLeft: '3px solid #e0af68',
+    activeLineBg: 'rgba(224,175,104,.06)',
+  },
+  {
+    id: 'minimal',
+    label: 'Minimal',
+    emoji: '—',
+    fontSize: 17,
+    lineHeight: 2.1,
+    fontFamily: "'Inter', system-ui, sans-serif",
+    letterSpacing: '-0.01em',
+    activeColor: '#e0e4f0',
+    activeBg: 'transparent',
+    activeFontWeight: 600,
+    activeTransform: 'scale(1)',
+    pastColor: '#9099b8',
+    pastFontWeight: 400,
+    futureColor: '#3d4166',
+    futureFontWeight: 400,
+    futureOpacity: 0.6,
+    activeBorderLeft: '2px solid #565f89',
+    activeLineBg: 'transparent',
+  },
+  {
+    id: 'purple-dream',
+    label: 'Purple',
+    emoji: '💜',
+    fontSize: 19,
+    lineHeight: 2.0,
+    activeColor: '#fff',
+    activeBg: '#bb9af7',
+    activeFontWeight: 700,
+    activeTransform: 'scale(1.07)',
+    activeTextShadow: '0 2px 8px rgba(187,154,247,0.4)',
+    pastColor: '#cdb8f7',
+    pastFontWeight: 500,
+    futureColor: '#4a3d6b',
+    futureFontWeight: 400,
+    activeBorderLeft: '3px solid #bb9af7',
+    activeLineBg: 'rgba(187,154,247,.06)',
+  },
+  {
+    id: 'green-life',
+    label: 'Green',
+    emoji: '🌿',
+    fontSize: 18,
+    lineHeight: 2.0,
+    fontFamily: "'Georgia', serif",
+    activeColor: '#1a2614',
+    activeBg: '#9ece6a',
+    activeFontWeight: 700,
+    activeTransform: 'scale(1.06)',
+    pastColor: '#9ece6a',
+    pastFontWeight: 500,
+    pastOpacity: 0.85,
+    futureColor: '#2d4a1e',
+    futureFontWeight: 400,
+    activeBorderLeft: '3px solid #9ece6a',
+    activeLineBg: 'rgba(158,206,106,.05)',
+  },
+  {
+    id: 'outline',
+    label: 'Outline',
+    emoji: '□',
+    fontSize: 18,
+    lineHeight: 2.0,
+    fontFamily: "'Inter', system-ui, sans-serif",
+    letterSpacing: '0.02em',
+    activeColor: '#7aa2f7',
+    activeBg: 'transparent',
+    activeFontWeight: 800,
+    activeTransform: 'scale(1.05)',
+    activeTextDecoration: 'none',
+    // Outline via border on the span
+    pastColor: '#c0caf5',
+    pastFontWeight: 500,
+    futureColor: '#414868',
+    futureFontWeight: 400,
+    activeBorderLeft: '3px solid #7aa2f7',
+    activeLineBg: 'transparent',
+  },
+]
+
+const STYLE_KEY = 'pf_lyric_style'
+
+function getStyle(): LyricStyle {
+  const id = localStorage.getItem(STYLE_KEY) || 'classic'
+  return LYRIC_STYLES.find(s => s.id === id) || LYRIC_STYLES[0]
+}
+
 export function LyricsView({ filename, onBack, apiFetch }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [transcript, setTranscript] = useState<Transcript | null>(null)
@@ -43,14 +281,21 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
   const [playing, setPlaying] = useState(false)
   const [volume, setVolume] = useState(1)
 
-  // Index of the currently active word
   const [activeWordIdx, setActiveWordIdx] = useState(-1)
-  // Index of the currently active utterance (line)
   const [activeLineIdx, setActiveLineIdx] = useState(-1)
+
+  const [style, setStyleState] = useState<LyricStyle>(getStyle)
+  const [showStylePicker, setShowStylePicker] = useState(false)
 
   const wordRefs = useRef<(HTMLSpanElement | null)[]>([])
   const lineRefs = useRef<(HTMLDivElement | null)[]>([])
   const lyricsScrollRef = useRef<HTMLDivElement | null>(null)
+
+  const changeStyle = (s: LyricStyle) => {
+    setStyleState(s)
+    localStorage.setItem(STYLE_KEY, s.id)
+    setShowStylePicker(false)
+  }
 
   // Load transcript on mount
   useEffect(() => {
@@ -84,17 +329,15 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
       const t = el.currentTime
       setCurrentTime(t)
 
-      // Find active word
       if (transcript) {
         let wi = -1
         for (let i = 0; i < transcript.words.length; i++) {
           const w = transcript.words[i]
           if (t >= w.start && t <= w.end) { wi = i; break }
-          if (t >= w.start) wi = i // last word before cursor
+          if (t >= w.start) wi = i
         }
         setActiveWordIdx(wi)
 
-        // Find active utterance (line)
         let li = -1
         for (let i = 0; i < transcript.utterances.length; i++) {
           const u = transcript.utterances[i]
@@ -162,9 +405,50 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
 
   const pct = duration ? (currentTime / duration) * 100 : 0
 
+  // Word style helper
+  const wordStyle = (isActive: boolean, isPast: boolean, isActiveLine: boolean): React.CSSProperties => {
+    const s = style
+    return {
+      display: 'inline-block',
+      marginRight: '0.35em',
+      padding: s.id === 'outline' && isActive ? '1px 5px' : '2px 4px',
+      borderRadius: s.id === 'outline' && isActive ? 4 : 4,
+      cursor: 'pointer',
+      transition: 'all 0.12s ease',
+      color: isActive ? s.activeColor : isPast ? s.pastColor : s.futureColor,
+      background: isActive ? s.activeBg : 'transparent',
+      fontWeight: isActive ? s.activeFontWeight : isPast ? s.pastFontWeight : s.futureFontWeight,
+      transform: isActive ? s.activeTransform : 'scale(1)',
+      textDecoration: isActive && s.activeTextDecoration
+        ? s.activeTextDecoration
+        : !isActive && isPast && s.pastTextDecoration
+        ? s.pastTextDecoration
+        : 'none',
+      fontStyle: isActive && s.activeFontStyle ? s.activeFontStyle : 'normal',
+      textShadow: isActive && s.activeTextShadow ? s.activeTextShadow : 'none',
+      animation: isActive && s.activeAnimation ? s.activeAnimation : 'none',
+      opacity: !isActiveLine && isPast && s.pastOpacity != null
+        ? s.pastOpacity
+        : isActive ? 1
+        : !isPast && s.futureOpacity != null ? s.futureOpacity : 1,
+      // Outline style: box-shadow border when active
+      boxShadow: s.id === 'outline' && isActive ? 'inset 0 0 0 2px #7aa2f7' : 'none',
+      fontFamily: s.fontFamily,
+      letterSpacing: s.letterSpacing,
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 0 }}>
+      {/* Flowy animation keyframes injected via style tag */}
+      <style>{`
+        @keyframes flowy-wave {
+          0%, 100% { transform: translateY(0) scale(1.05); }
+          50% { transform: translateY(-3px) scale(1.07); }
+        }
+      `}</style>
+
       {/* Top bar */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
@@ -201,6 +485,37 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
             {transcribing ? '⏳' : '↻ Re-transcribe'}
           </button>
         )}
+      </div>
+
+      {/* Style picker toolbar */}
+      <div style={{ position: 'relative', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', marginRight: 2 }}>Style:</span>
+          {LYRIC_STYLES.map(s => (
+            <button
+              key={s.id}
+              onClick={() => changeStyle(s)}
+              title={s.label}
+              style={{
+                background: style.id === s.id ? 'var(--accent)' : 'var(--surface2)',
+                border: `1px solid ${style.id === s.id ? 'var(--accent)' : 'var(--border)'}`,
+                color: style.id === s.id ? '#1a1b26' : 'var(--text-muted)',
+                borderRadius: 6,
+                padding: '3px 8px',
+                fontSize: 11,
+                cursor: 'pointer',
+                fontWeight: style.id === s.id ? 700 : 400,
+                transition: 'all 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <span>{s.emoji}</span>
+              <span>{s.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {error && (
@@ -248,7 +563,6 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
             {transcript.utterances.map((utt, li) => {
               const isActiveLine = li === activeLineIdx
-              const isPastLine = utt.end < currentTime
               return (
                 <div
                   key={li}
@@ -259,11 +573,10 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
                     transition: 'all 0.3s ease',
                     padding: '6px 12px',
                     borderRadius: 'var(--radius)',
-                    borderLeft: isActiveLine ? '3px solid var(--accent)' : '3px solid transparent',
-                    background: isActiveLine ? 'rgba(122,162,247,.06)' : 'transparent',
+                    borderLeft: isActiveLine ? style.activeBorderLeft : '3px solid transparent',
+                    background: isActiveLine ? style.activeLineBg : 'transparent',
                   }}
                 >
-                  {/* Line timestamp */}
                   <div style={{
                     fontSize: 10, color: 'var(--text-muted)',
                     marginBottom: 6, fontFamily: 'var(--font)',
@@ -271,10 +584,13 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
                     {fmt(utt.start)}
                   </div>
 
-                  {/* Words in this utterance */}
-                  <div style={{ lineHeight: 1.9, fontSize: 18, fontWeight: 500 }}>
+                  <div style={{
+                    lineHeight: style.lineHeight,
+                    fontSize: style.fontSize,
+                    fontFamily: style.fontFamily || 'inherit',
+                    letterSpacing: style.letterSpacing,
+                  }}>
                     {utt.words.map((w, wi) => {
-                      // Global word index
                       const globalIdx = transcript.words.findIndex(
                         gw => gw.start === w.start && gw.word === w.word
                       )
@@ -286,22 +602,7 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
                           key={wi}
                           ref={el => { if (globalIdx >= 0) wordRefs.current[globalIdx] = el }}
                           onClick={e => { e.stopPropagation(); seekToWord(w.start) }}
-                          style={{
-                            display: 'inline-block',
-                            marginRight: '0.35em',
-                            padding: '2px 4px',
-                            borderRadius: 4,
-                            cursor: 'pointer',
-                            transition: 'all 0.12s ease',
-                            // Active word: bright accent, slightly larger
-                            color: isActive ? '#fff'
-                                 : isPast   ? 'var(--text)'
-                                 : 'var(--text-muted)',
-                            background: isActive ? 'var(--accent)' : 'transparent',
-                            fontWeight: isActive ? 700 : isPast ? 500 : 400,
-                            transform: isActive ? 'scale(1.08)' : 'scale(1)',
-                            opacity: isPastLine && !isActiveLine ? 0.55 : 1,
-                          }}
+                          style={wordStyle(isActive, isPast, isActiveLine)}
                           title={`${fmt(w.start)} – ${fmt(w.end)} (${Math.round(w.confidence * 100)}%)`}
                         >
                           {w.punctuated_word}
@@ -317,7 +618,13 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
 
         {/* Fallback: flat word list if no utterances */}
         {transcript && transcript.utterances.length === 0 && transcript.words.length > 0 && (
-          <div style={{ lineHeight: 2.1, fontSize: 17, fontWeight: 500, padding: '0 12px' }}>
+          <div style={{
+            lineHeight: style.lineHeight,
+            fontSize: style.fontSize,
+            fontFamily: style.fontFamily || 'inherit',
+            letterSpacing: style.letterSpacing,
+            padding: '0 12px',
+          }}>
             {transcript.words.map((w, i) => {
               const isActive = i === activeWordIdx
               const isPast   = w.end < currentTime
@@ -325,15 +632,7 @@ export function LyricsView({ filename, onBack, apiFetch }: Props) {
                 <span
                   key={i}
                   onClick={() => seekToWord(w.start)}
-                  style={{
-                    display: 'inline-block', marginRight: '0.35em',
-                    padding: '2px 4px', borderRadius: 4, cursor: 'pointer',
-                    transition: 'all 0.12s',
-                    color: isActive ? '#fff' : isPast ? 'var(--text)' : 'var(--text-muted)',
-                    background: isActive ? 'var(--accent)' : 'transparent',
-                    fontWeight: isActive ? 700 : 400,
-                    transform: isActive ? 'scale(1.08)' : 'scale(1)',
-                  }}
+                  style={wordStyle(isActive, isPast, false)}
                 >
                   {w.punctuated_word}
                 </span>

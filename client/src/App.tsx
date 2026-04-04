@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { LibraryTab }    from './components/LibraryTab'
 import { StudioTab }     from './components/StudioTab'
 import { RecordingsTab } from './components/RecordingsTab'
@@ -7,6 +7,99 @@ import { LyricsView }    from './components/LyricsView'
 import { LoginPage }     from './components/LoginPage'
 import { useSettings }   from './hooks/useSettings'
 import { useAuth }       from './hooks/useAuth'
+import { useTheme }      from './contexts/ThemeContext'
+
+function ThemeSelector() {
+  const { currentTheme, setTheme, themes } = useTheme()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const darkThemes  = themes.filter(t => t.type === 'dark')
+  const lightThemes = themes.filter(t => t.type === 'light')
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          width: '100%', background: 'transparent', border: 'none',
+          padding: '6px 10px', borderRadius: 'var(--radius)',
+          cursor: 'pointer', color: 'var(--text-muted)', fontSize: 12,
+          fontFamily: 'var(--font)',
+        }}
+        title="Change theme"
+      >
+        <span style={{
+          width: 12, height: 12, borderRadius: '50%', flexShrink: 0,
+          background: currentTheme.colors.accent,
+          boxShadow: `0 0 6px ${currentTheme.colors.accent}`,
+        }} />
+        <span style={{ flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {currentTheme.name}
+        </span>
+        <span style={{ fontSize: 10 }}>{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', bottom: '100%', left: 0, right: 0,
+          background: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+          boxShadow: '0 -8px 32px rgba(0,0,0,.4)',
+          zIndex: 100, maxHeight: 320, overflowY: 'auto',
+        }}>
+          <div style={{ padding: '4px 10px 2px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>
+            Dark
+          </div>
+          {darkThemes.map(t => (
+            <button
+              key={t.id}
+              onClick={() => { setTheme(t.id); setOpen(false) }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                width: '100%', background: currentTheme.id === t.id ? 'var(--surface2)' : 'transparent',
+                border: 'none', padding: '6px 10px', cursor: 'pointer',
+                color: currentTheme.id === t.id ? 'var(--accent)' : 'var(--text)',
+                fontSize: 12, fontFamily: 'var(--font)', textAlign: 'left',
+              }}
+            >
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: t.colors.accent, flexShrink: 0 }} />
+              {t.name}
+            </button>
+          ))}
+          <div style={{ padding: '4px 10px 2px', fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-muted)', textTransform: 'uppercase', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+            Light
+          </div>
+          {lightThemes.map(t => (
+            <button
+              key={t.id}
+              onClick={() => { setTheme(t.id); setOpen(false) }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                width: '100%', background: currentTheme.id === t.id ? 'var(--surface2)' : 'transparent',
+                border: 'none', padding: '6px 10px', cursor: 'pointer',
+                color: currentTheme.id === t.id ? 'var(--accent)' : 'var(--text)',
+                fontSize: 12, fontFamily: 'var(--font)', textAlign: 'left',
+              }}
+            >
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: t.colors.accent, flexShrink: 0 }} />
+              {t.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 type Tab = 'library' | 'studio' | 'recordings' | 'settings'
 
@@ -68,6 +161,7 @@ export default function App() {
           </div>
 
           <div className="nav-section" style={{ marginTop: 'auto', paddingTop: 12 }}>
+            <ThemeSelector />
             <div className="nav-label">App</div>
             <div
               className={`nav-item${tab === 'settings' && !lyricsFilename ? ' active' : ''}`}
