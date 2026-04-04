@@ -263,6 +263,40 @@ app.delete('/api/recordings/:filename', (c) => {
   return c.json({ ok: true })
 })
 
+// ── Public share: audio stream (no auth) ──────────────────
+app.get('/api/share/audio/:filename', (c) => {
+  const filename = decodeURIComponent(c.req.param('filename'))
+  if (filename.includes('..')) return c.json({ error: 'Invalid' }, 400)
+  // Search all user dirs for the file
+  const userDirs = fs.existsSync(RECORDINGS_DIR)
+    ? fs.readdirSync(RECORDINGS_DIR, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
+    : []
+  for (const user of userDirs) {
+    const filePath = path.join(RECORDINGS_DIR, user, filename)
+    if (fs.existsSync(filePath)) {
+      const buf = fs.readFileSync(filePath)
+      return new Response(buf, { headers: { 'Content-Type': 'audio/webm', 'Accept-Ranges': 'bytes' } })
+    }
+  }
+  return c.json({ error: 'Not found' }, 404)
+})
+
+// ── Public share: transcript (no auth) ────────────────────
+app.get('/api/share/transcript/:filename', (c) => {
+  const filename = decodeURIComponent(c.req.param('filename'))
+  if (filename.includes('..')) return c.json({ error: 'Invalid' }, 400)
+  const userDirs = fs.existsSync(RECORDINGS_DIR)
+    ? fs.readdirSync(RECORDINGS_DIR, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
+    : []
+  for (const user of userDirs) {
+    const jsonPath = path.join(RECORDINGS_DIR, user, filename.replace(/\.[^.]+$/, '') + '.transcript.json')
+    if (fs.existsSync(jsonPath)) {
+      return c.json(JSON.parse(fs.readFileSync(jsonPath, 'utf-8')))
+    }
+  }
+  return c.json({ error: 'No transcript' }, 404)
+})
+
 // ── Get saved transcript — auth required ──────────────────
 app.get('/api/transcripts/:filename', (c) => {
   const auth = requireAuth(c)

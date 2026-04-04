@@ -51,7 +51,7 @@ export function SharePage({ filename }: Props) {
     .replace(/\b\w/g, c => c.toUpperCase())
 
   useEffect(() => {
-    fetch(`${API}/api/transcripts/${encodeURIComponent(filename)}`)
+    fetch(`${API}/api/share/transcript/${encodeURIComponent(filename)}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.words) setTranscript(d); setLoading(false) })
       .catch(() => setLoading(false))
@@ -60,7 +60,7 @@ export function SharePage({ filename }: Props) {
   useEffect(() => {
     const el = audioRef.current
     if (!el) return
-    el.src = `${API}/api/recordings/${encodeURIComponent(filename)}`
+    el.src = `${API}/api/share/audio/${encodeURIComponent(filename)}`
     const onTime = () => {
       const t = el.currentTime
       setCurrentTime(t)
