@@ -4,8 +4,8 @@ import { serve } from '@hono/node-server'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const PORT = 3025
-const DEEPGRAM_KEY = '3a11f8fe7e39741fdbe2a6a706bec8dba8d87ac0'
+const PORT = Number(process.env.PORT) || 3025
+const DEEPGRAM_KEY = process.env.DEEPGRAM_API_KEY || ''
 
 const MUSIC_DIR = path.join(process.cwd(), 'music')
 const RECORDINGS_DIR = path.join(process.cwd(), 'data')
