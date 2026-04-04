@@ -6,6 +6,7 @@ interface Props {
   onChangeTrack: () => void
   autoTranscribe: boolean
   onOpenLyrics: (filename: string) => void
+  apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>
 }
 
 function cleanName(filename: string) {
@@ -32,7 +33,7 @@ function WaveformBars({ amplitude, bars = 32, isRec = false }: { amplitude: numb
   )
 }
 
-export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, onOpenLyrics }: Props) {
+export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, onOpenLyrics, apiFetch }: Props) {
   const bgPlayer = useAudioPlayer()
   const recorder = useRecorder()
 
@@ -99,7 +100,7 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, onOpen
       const fd = new FormData()
       fd.append('audio', lastBlob, `${recName}.webm`)
       fd.append('name', recName)
-      const res = await fetch('/api/recordings', { method: 'POST', body: fd })
+      const res = await apiFetch('/api/recordings', { method: 'POST', body: fd })
       const json = await res.json()
       if (json.ok) {
         setSavedFilename(json.filename)
@@ -108,7 +109,7 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, onOpen
           setTranscribing(true)
           setSaveMsg(`✓ Saved · Transcribing…`)
           try {
-            const tr = await fetch(`/api/transcripts/${encodeURIComponent(json.filename)}`, { method: 'POST' })
+            const tr = await apiFetch(`/api/transcripts/${encodeURIComponent(json.filename)}`, { method: 'POST' })
             const td = await tr.json()
             if (td.error) throw new Error(td.error)
             setSaveMsg(`✓ Saved & transcribed — ${td.words?.length ?? 0} words`)

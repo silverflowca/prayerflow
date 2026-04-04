@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { LibraryTab }   from './components/LibraryTab'
-import { StudioTab }    from './components/StudioTab'
+import { LibraryTab }    from './components/LibraryTab'
+import { StudioTab }     from './components/StudioTab'
 import { RecordingsTab } from './components/RecordingsTab'
-import { SettingsTab }  from './components/SettingsTab'
-import { LyricsView }   from './components/LyricsView'
-import { useSettings }  from './hooks/useSettings'
+import { SettingsTab }   from './components/SettingsTab'
+import { LyricsView }    from './components/LyricsView'
+import { LoginPage }     from './components/LoginPage'
+import { useSettings }   from './hooks/useSettings'
+import { useAuth }       from './hooks/useAuth'
 
 type Tab = 'library' | 'studio' | 'recordings' | 'settings'
 
@@ -13,6 +15,11 @@ export default function App() {
   const [selectedTrack, setSelectedTrack] = useState<string | null>(null)
   const [lyricsFilename, setLyricsFilename] = useState<string | null>(null)
   const { settings, update } = useSettings()
+  const { isLoggedIn, username, login, logout, apiFetch } = useAuth()
+
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={login} />
+  }
 
   const selectTrack = (name: string) => {
     setSelectedTrack(name)
@@ -27,7 +34,6 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="sidebar-logo">🙏</div>
@@ -74,11 +80,27 @@ export default function App() {
                 </span>
               )}
             </div>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '8px 10px', marginTop: 4,
+              borderTop: '1px solid var(--border)',
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg, var(--info), var(--accent))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 700, color: '#fff',
+              }}>
+                {username?.[0]?.toUpperCase()}
+              </div>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {username}
+              </span>
+            </div>
           </div>
         </nav>
       </aside>
 
-      {/* Main */}
       <div className="main-area">
         <div className="topbar">
           <span className="topbar-title">{topbarTitle}</span>
@@ -96,7 +118,7 @@ export default function App() {
 
         <div className="page">
           {lyricsFilename
-            ? <LyricsView filename={lyricsFilename} onBack={() => setLyricsFilename(null)} />
+            ? <LyricsView filename={lyricsFilename} onBack={() => setLyricsFilename(null)} apiFetch={apiFetch} />
             : tab === 'library'
               ? <LibraryTab onSelect={selectTrack} selectedTrack={selectedTrack} />
             : tab === 'studio'
@@ -105,10 +127,11 @@ export default function App() {
                   onChangeTrack={() => setTab('library')}
                   autoTranscribe={settings.autoTranscribe}
                   onOpenLyrics={setLyricsFilename}
+                  apiFetch={apiFetch}
                 />
             : tab === 'recordings'
-              ? <RecordingsTab onOpenLyrics={setLyricsFilename} />
-            : <SettingsTab settings={settings} onUpdate={update} />
+              ? <RecordingsTab onOpenLyrics={setLyricsFilename} apiFetch={apiFetch} />
+              : <SettingsTab settings={settings} onUpdate={update} username={username!} onLogout={logout} />
           }
         </div>
       </div>

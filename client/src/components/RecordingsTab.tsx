@@ -15,9 +15,10 @@ function fmtDate(iso: string) {
 
 interface Props {
   onOpenLyrics: (filename: string) => void
+  apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>
 }
 
-export function RecordingsTab({ onOpenLyrics }: Props) {
+export function RecordingsTab({ onOpenLyrics, apiFetch }: Props) {
   const [recordings, setRecordings] = useState<Recording[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -25,31 +26,49 @@ export function RecordingsTab({ onOpenLyrics }: Props) {
   const [hasTranscript, setHasTranscript] = useState<Record<string, boolean>>({})
   const [transcribing, setTranscribing] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  // Blob URLs for inline audio playback (avoids auth header issue with <audio src>)
+  const [audioBlobUrls, setAudioBlobUrls] = useState<Record<string, string>>({})
 
   const load = () => {
     setLoading(true)
-    fetch('/api/recordings')
+    apiFetch('/api/recordings')
       .then(r => r.json())
       .then(d => {
         const recs: Recording[] = d.recordings || []
         setRecordings(recs)
         setLoading(false)
-        // Check which ones already have transcripts
+        // Check transcripts + pre-fetch blob URLs for playback
         recs.forEach(rec => {
-          fetch(`/api/transcripts/${encodeURIComponent(rec.name)}`)
+          apiFetch(`/api/transcripts/${encodeURIComponent(rec.name)}`)
             .then(r => setHasTranscript(prev => ({ ...prev, [rec.name]: r.ok })))
+            .catch(() => {})
+          apiFetch(`/api/recordings/${encodeURIComponent(rec.name)}`)
+            .then(r => r.blob())
+            .then(blob => {
+              const url = URL.createObjectURL(blob)
+              setAudioBlobUrls(prev => ({ ...prev, [rec.name]: url }))
+            })
             .catch(() => {})
         })
       })
       .catch(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    return () => {
+      // Revoke blob URLs on unmount
+      setAudioBlobUrls(prev => {
+        Object.values(prev).forEach(URL.revokeObjectURL)
+        return {}
+      })
+    }
+  }, [])
 
   const handleDelete = async (name: string) => {
     if (!confirm(`Delete "${name}"?`)) return
     setDeleting(name)
-    await fetch(`/api/recordings/${encodeURIComponent(name)}`, { method: 'DELETE' })
+    await apiFetch(`/api/recordings/${encodeURIComponent(name)}`, { method: 'DELETE' })
     setDeleting(null)
     load()
   }
@@ -62,17 +81,21 @@ export function RecordingsTab({ onOpenLyrics }: Props) {
     })
   }
 
-  const handleDownload = (name: string) => {
+  const handleDownload = async (name: string) => {
+    const res = await apiFetch(`/api/recordings/${encodeURIComponent(name)}`)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = `/api/recordings/${encodeURIComponent(name)}`
-    a.download = name.replace('.webm', '.webm')
+    a.href = url
+    a.download = name
     a.click()
+    URL.revokeObjectURL(url)
   }
 
   const handleTranscribe = async (name: string) => {
     setTranscribing(name)
     try {
-      const res = await fetch(`/api/transcripts/${encodeURIComponent(name)}`, { method: 'POST' })
+      const res = await apiFetch(`/api/transcripts/${encodeURIComponent(name)}`, { method: 'POST' })
       const data = await res.json()
       if (!data.error) {
         setHasTranscript(prev => ({ ...prev, [name]: true }))
@@ -110,12 +133,14 @@ export function RecordingsTab({ onOpenLyrics }: Props) {
             {fmtDate(rec.createdAt)}
           </span>
           <div className="rec-row-actions">
-            {/* Inline playback */}
-            <audio
-              controls
-              src={`/api/recordings/${encodeURIComponent(rec.name)}`}
-              style={{height:28, accentColor:'var(--accent)', maxWidth:180}}
-            />
+            {/* Inline playback — uses pre-fetched blob URL so auth header is included */}
+            {audioBlobUrls[rec.name] && (
+              <audio
+                controls
+                src={audioBlobUrls[rec.name]}
+                style={{height:28, accentColor:'var(--accent)', maxWidth:180}}
+              />
+            )}
             {/* Share link */}
             <button
               className="btn btn-ghost btn-sm"

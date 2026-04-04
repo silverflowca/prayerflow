@@ -28,9 +28,10 @@ interface Transcript {
 interface Props {
   filename: string
   onBack: () => void
+  apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>
 }
 
-export function LyricsView({ filename, onBack }: Props) {
+export function LyricsView({ filename, onBack, apiFetch }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [transcript, setTranscript] = useState<Transcript | null>(null)
   const [loading, setLoading] = useState(true)
@@ -53,7 +54,7 @@ export function LyricsView({ filename, onBack }: Props) {
 
   // Load transcript on mount
   useEffect(() => {
-    fetch(`/api/transcripts/${encodeURIComponent(filename)}`)
+    apiFetch(`/api/transcripts/${encodeURIComponent(filename)}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d && d.words) setTranscript(d)
@@ -62,11 +63,23 @@ export function LyricsView({ filename, onBack }: Props) {
       .catch(() => setLoading(false))
   }, [filename])
 
+  // Load audio as blob (needs auth header) then attach to element
+  useEffect(() => {
+    let blobUrl: string | null = null
+    apiFetch(`/api/recordings/${encodeURIComponent(filename)}`)
+      .then(r => r.blob())
+      .then(blob => {
+        blobUrl = URL.createObjectURL(blob)
+        if (audioRef.current) audioRef.current.src = blobUrl
+      })
+      .catch(() => {})
+    return () => { if (blobUrl) URL.revokeObjectURL(blobUrl) }
+  }, [filename])
+
   // Audio time tracking
   useEffect(() => {
     const el = audioRef.current
     if (!el) return
-    el.src = `/api/recordings/${encodeURIComponent(filename)}`
     const onTime = () => {
       const t = el.currentTime
       setCurrentTime(t)
@@ -137,7 +150,7 @@ export function LyricsView({ filename, onBack }: Props) {
     setTranscribing(true)
     setError(null)
     try {
-      const res = await fetch(`/api/transcripts/${encodeURIComponent(filename)}`, { method: 'POST' })
+      const res = await apiFetch(`/api/transcripts/${encodeURIComponent(filename)}`, { method: 'POST' })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       setTranscript(data)
