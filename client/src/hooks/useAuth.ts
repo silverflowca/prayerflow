@@ -30,7 +30,7 @@ export function useAuth() {
   }, [])
 
   // Authenticated fetch — injects Authorization header automatically
-  const apiFetch = useCallback((input: string, init: RequestInit = {}) => {
+  const apiFetch = useCallback((input: RequestInfo, init: RequestInit = {}) => {
     const headers = new Headers(init.headers || {})
     if (auth.token) headers.set('Authorization', `Bearer ${auth.token}`)
     return fetch(input, { ...init, headers })
