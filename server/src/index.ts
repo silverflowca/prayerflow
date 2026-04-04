@@ -7,7 +7,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 
 const PORT = Number(process.env.PORT) || 3025
-const DEEPGRAM_KEY = process.env.DEEPGRAM_API_KEY || ''
+const DEEPGRAM_KEY = process.env.DEEPGRAM_API_KEY || '3a11f8fe7e39741fdbe2a6a706bec8dba8d87ac0'
 const JWT_SECRET = process.env.JWT_SECRET || 'prayerflow-dev-secret-change-in-prod'
 
 const MUSIC_DIR = path.join(process.cwd(), 'music')
@@ -308,14 +308,28 @@ app.get('/api/transcripts/:filename', (c) => {
   return c.json(JSON.parse(fs.readFileSync(jsonPath, 'utf-8')))
 })
 
-// ── Transcribe — auth required ────────────────────────────
+// ── Transcribe — auth optional (falls back to searching all user dirs) ────
 app.post('/api/transcripts/:filename', async (c) => {
-  const auth = requireAuth(c)
-  if (auth instanceof Response) return auth
   const filename = decodeURIComponent(c.req.param('filename'))
   if (filename.includes('..')) return c.json({ error: 'Invalid' }, 400)
-  const filePath = path.join(RECORDINGS_DIR, auth.username, filename)
-  if (!fs.existsSync(filePath)) return c.json({ error: 'Recording not found' }, 404)
+  // Try auth first, then search all dirs
+  const authResult = requireAuth(c)
+  let filePath: string | null = null
+  let saveDir: string
+  if (!(authResult instanceof Response)) {
+    const candidate = path.join(RECORDINGS_DIR, authResult.username, filename)
+    if (fs.existsSync(candidate)) { filePath = candidate; saveDir = path.join(RECORDINGS_DIR, authResult.username) }
+  }
+  if (!filePath) {
+    const userDirs = fs.existsSync(RECORDINGS_DIR)
+      ? fs.readdirSync(RECORDINGS_DIR, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name)
+      : []
+    for (const user of userDirs) {
+      const candidate = path.join(RECORDINGS_DIR, user, filename)
+      if (fs.existsSync(candidate)) { filePath = candidate; saveDir = path.join(RECORDINGS_DIR, user); break }
+    }
+  }
+  if (!filePath!) return c.json({ error: 'Recording not found' }, 404)
 
   try {
     const audioBuffer = fs.readFileSync(filePath)
@@ -356,7 +370,7 @@ app.post('/api/transcripts/:filename', async (c) => {
       words, utterances, createdAt: new Date().toISOString(),
     }
 
-    const jsonPath = path.join(RECORDINGS_DIR, auth.username, filename.replace(/\.[^.]+$/, '') + '.transcript.json')
+    const jsonPath = path.join(saveDir!, filename.replace(/\.[^.]+$/, '') + '.transcript.json')
     fs.writeFileSync(jsonPath, JSON.stringify(transcript, null, 2))
     return c.json(transcript)
   } catch (e) {
