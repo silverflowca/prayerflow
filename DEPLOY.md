@@ -15,23 +15,26 @@ Two Railway services in the same project:
 
 ## Step 1 — Deploy the Server
 
-1. In Railway, create a new project and add a service from the `prayerflow/server` folder
-2. Railway detects `Dockerfile` and builds automatically
+1. In Railway, create a new project → **Add Service → GitHub Repo** → select this repo
+2. **CRITICAL — Set Root Directory:** In the service settings → **Source** → set **Root Directory** to `server`
+   - This tells Railway to build from `server/` and use `server/Dockerfile`
+   - Without this, Railway reads the root `package.json` and fails to detect the start command
 3. Set **one** environment variable:
 
 | Variable | Value |
 |----------|-------|
 | `DEEPGRAM_API_KEY` | Your Deepgram API key |
 
-That's it. Railway auto-creates the `/app/data` volume from `railway.json`. Music is bundled in the image.
+Railway auto-creates the `/app/data` volume from `railway.json`. Music is bundled in the image.
 
 ---
 
 ## Step 2 — Deploy the Client
 
-1. Add a second service in the **same Railway project** from the `prayerflow/client` folder
-2. No environment variables needed
-3. The nginx `/api` proxy resolves `prayerflow-server` via Railway's internal DNS automatically (same project = internal hostname works)
+1. In the same Railway project → **Add Service → GitHub Repo** → select this repo again
+2. **CRITICAL — Set Root Directory:** In the service settings → **Source** → set **Root Directory** to `client`
+3. No environment variables needed
+4. The nginx `/api` proxy resolves `prayerflow-server` via Railway's internal DNS automatically (same project = internal hostname works)
 
 ---
 
@@ -84,6 +87,8 @@ npx serve dist
 ---
 
 ## Troubleshooting
+
+**"No start command detected" / Railpack error** — Railway is building from the wrong directory. Go to service settings → Source → set **Root Directory** to `server` (for the server service) or `client` (for the client service). This is the most common setup mistake.
 
 **No tracks appear** — Check that `server/music/` contains `.mp3` files. They're bundled at build time so a redeploy is needed after adding files.
 
