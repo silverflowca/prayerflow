@@ -1,0 +1,1942 @@
+{
+  "filename": "scripture_reading_1775250835377.webm",
+  "transcript": "Welcome to the podcast. Today, we're gonna be talking about Psalm a 107. Thanksgiving to the Lord for his great works, his great works of deliverance. So you ready? Here we go. Oh, give thanks to the Lord for he is good, for his mercy endures forever. Let the redeemed of the Lord say so, whom he has redeemed from the hand of the enemy and gathered up all the lands from the East and from the West, from the North and from the South. They wandered in the wilderness in the desolate way. They found no city to dwell in. Hunger and thirsty, their soul fainted in them. They cried out to the Lord in your trouble. And he delivered them out of their distress, and he led them forth by his right way.",
+  "duration": 47.64,
+  "words": [
+    {
+      "word": "welcome",
+      "punctuated_word": "Welcome",
+      "start": 0.96,
+      "end": 1.9199998,
+      "confidence": 0.53126425
+    },
+    {
+      "word": "to",
+      "punctuated_word": "to",
+      "start": 2.72,
+      "end": 2.8799999,
+      "confidence": 0.999635
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 2.8799999,
+      "end": 3.04,
+      "confidence": 0.99975604
+    },
+    {
+      "word": "podcast",
+      "punctuated_word": "podcast.",
+      "start": 3.04,
+      "end": 3.52,
+      "confidence": 0.9924643
+    },
+    {
+      "word": "today",
+      "punctuated_word": "Today,",
+      "start": 3.52,
+      "end": 3.9199998,
+      "confidence": 0.8903223
+    },
+    {
+      "word": "we're",
+      "punctuated_word": "we're",
+      "start": 3.9199998,
+      "end": 4,
+      "confidence": 0.9992967
+    },
+    {
+      "word": "gonna",
+      "punctuated_word": "gonna",
+      "start": 4,
+      "end": 4.16,
+      "confidence": 0.94929314
+    },
+    {
+      "word": "be",
+      "punctuated_word": "be",
+      "start": 4.16,
+      "end": 4.24,
+      "confidence": 0.9950062
+    },
+    {
+      "word": "talking",
+      "punctuated_word": "talking",
+      "start": 4.24,
+      "end": 4.48,
+      "confidence": 0.9991202
+    },
+    {
+      "word": "about",
+      "punctuated_word": "about",
+      "start": 4.48,
+      "end": 4.72,
+      "confidence": 0.9944435
+    },
+    {
+      "word": "psalm",
+      "punctuated_word": "Psalm",
+      "start": 4.72,
+      "end": 5.12,
+      "confidence": 0.9609185
+    },
+    {
+      "word": "a",
+      "punctuated_word": "a",
+      "start": 5.12,
+      "end": 5.3599997,
+      "confidence": 0.9856527
+    },
+    {
+      "word": "107",
+      "punctuated_word": "107.",
+      "start": 5.3599997,
+      "end": 6.16,
+      "confidence": 0.95325917
+    },
+    {
+      "word": "thanksgiving",
+      "punctuated_word": "Thanksgiving",
+      "start": 6.16,
+      "end": 6.56,
+      "confidence": 0.66327524
+    },
+    {
+      "word": "to",
+      "punctuated_word": "to",
+      "start": 6.56,
+      "end": 6.8799996,
+      "confidence": 0.99907327
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 6.8799996,
+      "end": 6.96,
+      "confidence": 0.99509
+    },
+    {
+      "word": "lord",
+      "punctuated_word": "Lord",
+      "start": 6.96,
+      "end": 7.2,
+      "confidence": 0.7291543
+    },
+    {
+      "word": "for",
+      "punctuated_word": "for",
+      "start": 7.2,
+      "end": 7.44,
+      "confidence": 0.9983364
+    },
+    {
+      "word": "his",
+      "punctuated_word": "his",
+      "start": 7.44,
+      "end": 7.6,
+      "confidence": 0.9593242
+    },
+    {
+      "word": "great",
+      "punctuated_word": "great",
+      "start": 7.6,
+      "end": 7.9199996,
+      "confidence": 0.9992988
+    },
+    {
+      "word": "works",
+      "punctuated_word": "works,",
+      "start": 7.9199996,
+      "end": 8.559999,
+      "confidence": 0.86785567
+    },
+    {
+      "word": "his",
+      "punctuated_word": "his",
+      "start": 8.559999,
+      "end": 8.8,
+      "confidence": 0.9916338
+    },
+    {
+      "word": "great",
+      "punctuated_word": "great",
+      "start": 8.8,
+      "end": 9.04,
+      "confidence": 0.999181
+    },
+    {
+      "word": "works",
+      "punctuated_word": "works",
+      "start": 9.04,
+      "end": 9.28,
+      "confidence": 0.9994584
+    },
+    {
+      "word": "of",
+      "punctuated_word": "of",
+      "start": 9.28,
+      "end": 9.599999,
+      "confidence": 0.998944
+    },
+    {
+      "word": "deliverance",
+      "punctuated_word": "deliverance.",
+      "start": 9.599999,
+      "end": 10.639999,
+      "confidence": 0.9979596
+    },
+    {
+      "word": "so",
+      "punctuated_word": "So",
+      "start": 12.639999,
+      "end": 12.88,
+      "confidence": 0.9898192
+    },
+    {
+      "word": "you",
+      "punctuated_word": "you",
+      "start": 12.88,
+      "end": 13.12,
+      "confidence": 0.7975034
+    },
+    {
+      "word": "ready",
+      "punctuated_word": "ready?",
+      "start": 13.12,
+      "end": 13.679999,
+      "confidence": 0.79311305
+    },
+    {
+      "word": "here",
+      "punctuated_word": "Here",
+      "start": 13.679999,
+      "end": 14,
+      "confidence": 0.9776538
+    },
+    {
+      "word": "we",
+      "punctuated_word": "we",
+      "start": 14,
+      "end": 14.08,
+      "confidence": 0.9952414
+    },
+    {
+      "word": "go",
+      "punctuated_word": "go.",
+      "start": 14.08,
+      "end": 14.32,
+      "confidence": 0.99953455
+    },
+    {
+      "word": "oh",
+      "punctuated_word": "Oh,",
+      "start": 15.285,
+      "end": 15.525001,
+      "confidence": 0.9253292
+    },
+    {
+      "word": "give",
+      "punctuated_word": "give",
+      "start": 15.525001,
+      "end": 15.765,
+      "confidence": 0.9904427
+    },
+    {
+      "word": "thanks",
+      "punctuated_word": "thanks",
+      "start": 15.765,
+      "end": 16.085001,
+      "confidence": 0.9982938
+    },
+    {
+      "word": "to",
+      "punctuated_word": "to",
+      "start": 16.085001,
+      "end": 16.245,
+      "confidence": 0.9994562
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 16.245,
+      "end": 16.405,
+      "confidence": 0.9993383
+    },
+    {
+      "word": "lord",
+      "punctuated_word": "Lord",
+      "start": 16.405,
+      "end": 16.565,
+      "confidence": 0.76523024
+    },
+    {
+      "word": "for",
+      "punctuated_word": "for",
+      "start": 16.565,
+      "end": 16.725,
+      "confidence": 0.7530851
+    },
+    {
+      "word": "he",
+      "punctuated_word": "he",
+      "start": 16.725,
+      "end": 16.885,
+      "confidence": 0.96728843
+    },
+    {
+      "word": "is",
+      "punctuated_word": "is",
+      "start": 16.885,
+      "end": 17.125,
+      "confidence": 0.9996424
+    },
+    {
+      "word": "good",
+      "punctuated_word": "good,",
+      "start": 17.125,
+      "end": 17.605,
+      "confidence": 0.81165314
+    },
+    {
+      "word": "for",
+      "punctuated_word": "for",
+      "start": 17.845001,
+      "end": 18.005001,
+      "confidence": 0.9992225
+    },
+    {
+      "word": "his",
+      "punctuated_word": "his",
+      "start": 18.005001,
+      "end": 18.245,
+      "confidence": 0.9967253
+    },
+    {
+      "word": "mercy",
+      "punctuated_word": "mercy",
+      "start": 18.245,
+      "end": 18.565,
+      "confidence": 0.9997882
+    },
+    {
+      "word": "endures",
+      "punctuated_word": "endures",
+      "start": 18.565,
+      "end": 19.045,
+      "confidence": 0.99575686
+    },
+    {
+      "word": "forever",
+      "punctuated_word": "forever.",
+      "start": 19.045,
+      "end": 19.685,
+      "confidence": 0.8262344
+    },
+    {
+      "word": "let",
+      "punctuated_word": "Let",
+      "start": 19.685001,
+      "end": 19.845001,
+      "confidence": 0.82728183
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 19.845001,
+      "end": 20.005001,
+      "confidence": 0.99832577
+    },
+    {
+      "word": "redeemed",
+      "punctuated_word": "redeemed",
+      "start": 20.005001,
+      "end": 20.245,
+      "confidence": 0.89001286
+    },
+    {
+      "word": "of",
+      "punctuated_word": "of",
+      "start": 20.245,
+      "end": 20.485,
+      "confidence": 0.9919109
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 20.485,
+      "end": 20.565,
+      "confidence": 0.995891
+    },
+    {
+      "word": "lord",
+      "punctuated_word": "Lord",
+      "start": 20.565,
+      "end": 20.725,
+      "confidence": 0.9718579
+    },
+    {
+      "word": "say",
+      "punctuated_word": "say",
+      "start": 20.725,
+      "end": 21.045,
+      "confidence": 0.96686804
+    },
+    {
+      "word": "so",
+      "punctuated_word": "so,",
+      "start": 21.045,
+      "end": 21.685,
+      "confidence": 0.9168658
+    },
+    {
+      "word": "whom",
+      "punctuated_word": "whom",
+      "start": 21.845001,
+      "end": 22.005001,
+      "confidence": 0.9964941
+    },
+    {
+      "word": "he",
+      "punctuated_word": "he",
+      "start": 22.005001,
+      "end": 22.645,
+      "confidence": 0.99604756
+    },
+    {
+      "word": "has",
+      "punctuated_word": "has",
+      "start": 22.645,
+      "end": 22.965,
+      "confidence": 0.99671566
+    },
+    {
+      "word": "redeemed",
+      "punctuated_word": "redeemed",
+      "start": 22.965,
+      "end": 23.445,
+      "confidence": 0.998351
+    },
+    {
+      "word": "from",
+      "punctuated_word": "from",
+      "start": 23.445,
+      "end": 23.685001,
+      "confidence": 0.9961979
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 23.685001,
+      "end": 23.845001,
+      "confidence": 0.9994066
+    },
+    {
+      "word": "hand",
+      "punctuated_word": "hand",
+      "start": 23.845001,
+      "end": 24.005001,
+      "confidence": 0.9995634
+    },
+    {
+      "word": "of",
+      "punctuated_word": "of",
+      "start": 24.005001,
+      "end": 24.165,
+      "confidence": 0.99980634
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 24.165,
+      "end": 24.244999,
+      "confidence": 0.9995963
+    },
+    {
+      "word": "enemy",
+      "punctuated_word": "enemy",
+      "start": 24.244999,
+      "end": 24.885,
+      "confidence": 0.9999218
+    },
+    {
+      "word": "and",
+      "punctuated_word": "and",
+      "start": 24.965,
+      "end": 25.285,
+      "confidence": 0.61245507
+    },
+    {
+      "word": "gathered",
+      "punctuated_word": "gathered",
+      "start": 25.285,
+      "end": 25.685001,
+      "confidence": 0.9681446
+    },
+    {
+      "word": "up",
+      "punctuated_word": "up",
+      "start": 25.685001,
+      "end": 25.845001,
+      "confidence": 0.69319457
+    },
+    {
+      "word": "all",
+      "punctuated_word": "all",
+      "start": 25.845001,
+      "end": 26.005001,
+      "confidence": 0.6091308
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 26.005001,
+      "end": 26.085,
+      "confidence": 0.9809482
+    },
+    {
+      "word": "lands",
+      "punctuated_word": "lands",
+      "start": 26.085,
+      "end": 26.645,
+      "confidence": 0.8389967
+    },
+    {
+      "word": "from",
+      "punctuated_word": "from",
+      "start": 26.645,
+      "end": 26.965,
+      "confidence": 0.54654825
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 26.965,
+      "end": 27.125,
+      "confidence": 0.99894637
+    },
+    {
+      "word": "east",
+      "punctuated_word": "East",
+      "start": 27.125,
+      "end": 27.365,
+      "confidence": 0.95243216
+    },
+    {
+      "word": "and",
+      "punctuated_word": "and",
+      "start": 27.365,
+      "end": 27.525,
+      "confidence": 0.9839282
+    },
+    {
+      "word": "from",
+      "punctuated_word": "from",
+      "start": 27.525,
+      "end": 27.685001,
+      "confidence": 0.99921215
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 27.685001,
+      "end": 27.845001,
+      "confidence": 0.99775213
+    },
+    {
+      "word": "west",
+      "punctuated_word": "West,",
+      "start": 27.845001,
+      "end": 28.005001,
+      "confidence": 0.98958445
+    },
+    {
+      "word": "from",
+      "punctuated_word": "from",
+      "start": 28.05,
+      "end": 28.369999,
+      "confidence": 0.9995951
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 28.369999,
+      "end": 28.449999,
+      "confidence": 0.9990957
+    },
+    {
+      "word": "north",
+      "punctuated_word": "North",
+      "start": 28.449999,
+      "end": 28.689999,
+      "confidence": 0.99004364
+    },
+    {
+      "word": "and",
+      "punctuated_word": "and",
+      "start": 28.689999,
+      "end": 28.849998,
+      "confidence": 0.90346533
+    },
+    {
+      "word": "from",
+      "punctuated_word": "from",
+      "start": 28.849998,
+      "end": 29.009998,
+      "confidence": 0.98219556
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 29.009998,
+      "end": 29.17,
+      "confidence": 0.99311274
+    },
+    {
+      "word": "south",
+      "punctuated_word": "South.",
+      "start": 29.17,
+      "end": 29.65,
+      "confidence": 0.95226055
+    },
+    {
+      "word": "they",
+      "punctuated_word": "They",
+      "start": 29.65,
+      "end": 29.81,
+      "confidence": 0.999198
+    },
+    {
+      "word": "wandered",
+      "punctuated_word": "wandered",
+      "start": 29.81,
+      "end": 30.21,
+      "confidence": 0.99407864
+    },
+    {
+      "word": "in",
+      "punctuated_word": "in",
+      "start": 30.21,
+      "end": 30.369999,
+      "confidence": 0.9855634
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 30.369999,
+      "end": 30.449999,
+      "confidence": 0.99718374
+    },
+    {
+      "word": "wilderness",
+      "punctuated_word": "wilderness",
+      "start": 30.449999,
+      "end": 30.849998,
+      "confidence": 0.99966544
+    },
+    {
+      "word": "in",
+      "punctuated_word": "in",
+      "start": 30.849998,
+      "end": 31.09,
+      "confidence": 0.86729586
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 31.09,
+      "end": 31.25,
+      "confidence": 0.893822
+    },
+    {
+      "word": "desolate",
+      "punctuated_word": "desolate",
+      "start": 31.25,
+      "end": 31.65,
+      "confidence": 0.99959105
+    },
+    {
+      "word": "way",
+      "punctuated_word": "way.",
+      "start": 31.65,
+      "end": 32.21,
+      "confidence": 0.98598766
+    },
+    {
+      "word": "they",
+      "punctuated_word": "They",
+      "start": 32.37,
+      "end": 32.61,
+      "confidence": 0.99948126
+    },
+    {
+      "word": "found",
+      "punctuated_word": "found",
+      "start": 32.61,
+      "end": 33.01,
+      "confidence": 0.99955875
+    },
+    {
+      "word": "no",
+      "punctuated_word": "no",
+      "start": 33.01,
+      "end": 33.41,
+      "confidence": 0.999603
+    },
+    {
+      "word": "city",
+      "punctuated_word": "city",
+      "start": 33.41,
+      "end": 33.649998,
+      "confidence": 0.9676398
+    },
+    {
+      "word": "to",
+      "punctuated_word": "to",
+      "start": 33.649998,
+      "end": 33.809998,
+      "confidence": 0.848641
+    },
+    {
+      "word": "dwell",
+      "punctuated_word": "dwell",
+      "start": 33.809998,
+      "end": 34.05,
+      "confidence": 0.9978974
+    },
+    {
+      "word": "in",
+      "punctuated_word": "in.",
+      "start": 34.05,
+      "end": 34.53,
+      "confidence": 0.773243
+    },
+    {
+      "word": "hunger",
+      "punctuated_word": "Hunger",
+      "start": 34.53,
+      "end": 34.93,
+      "confidence": 0.993314
+    },
+    {
+      "word": "and",
+      "punctuated_word": "and",
+      "start": 34.93,
+      "end": 35.09,
+      "confidence": 0.9983943
+    },
+    {
+      "word": "thirsty",
+      "punctuated_word": "thirsty,",
+      "start": 35.09,
+      "end": 35.809998,
+      "confidence": 0.9940511
+    },
+    {
+      "word": "their",
+      "punctuated_word": "their",
+      "start": 35.809998,
+      "end": 36.05,
+      "confidence": 0.9778466
+    },
+    {
+      "word": "soul",
+      "punctuated_word": "soul",
+      "start": 36.05,
+      "end": 36.29,
+      "confidence": 0.9987925
+    },
+    {
+      "word": "fainted",
+      "punctuated_word": "fainted",
+      "start": 36.29,
+      "end": 36.77,
+      "confidence": 0.99901175
+    },
+    {
+      "word": "in",
+      "punctuated_word": "in",
+      "start": 36.77,
+      "end": 36.85,
+      "confidence": 0.9846994
+    },
+    {
+      "word": "them",
+      "punctuated_word": "them.",
+      "start": 36.85,
+      "end": 37.41,
+      "confidence": 0.989929
+    },
+    {
+      "word": "they",
+      "punctuated_word": "They",
+      "start": 37.41,
+      "end": 37.57,
+      "confidence": 0.9981172
+    },
+    {
+      "word": "cried",
+      "punctuated_word": "cried",
+      "start": 37.57,
+      "end": 37.89,
+      "confidence": 0.99948466
+    },
+    {
+      "word": "out",
+      "punctuated_word": "out",
+      "start": 37.89,
+      "end": 38.05,
+      "confidence": 0.99894327
+    },
+    {
+      "word": "to",
+      "punctuated_word": "to",
+      "start": 38.05,
+      "end": 38.29,
+      "confidence": 0.99386793
+    },
+    {
+      "word": "the",
+      "punctuated_word": "the",
+      "start": 38.29,
+      "end": 38.449997,
+      "confidence": 0.99514645
+    },
+    {
+      "word": "lord",
+      "punctuated_word": "Lord",
+      "start": 38.449997,
+      "end": 38.61,
+      "confidence": 0.64894503
+    },
+    {
+      "word": "in",
+      "punctuated_word": "in",
+      "start": 38.61,
+      "end": 38.85,
+      "confidence": 0.79304934
+    },
+    {
+      "word": "your",
+      "punctuated_word": "your",
+      "start": 38.85,
+      "end": 39.329998,
+      "confidence": 0.53599906
+    },
+    {
+      "word": "trouble",
+      "punctuated_word": "trouble.",
+      "start": 39.105,
+      "end": 39.665,
+      "confidence": 0.80578756
+    },
+    {
+      "word": "and",
+      "punctuated_word": "And",
+      "start": 39.745,
+      "end": 39.905,
+      "confidence": 0.9968053
+    },
+    {
+      "word": "he",
+      "punctuated_word": "he",
+      "start": 39.905,
+      "end": 40.065,
+      "confidence": 0.9501061
+    },
+    {
+      "word": "delivered",
+      "punctuated_word": "delivered",
+      "start": 40.065,
+      "end": 40.465,
+      "confidence": 0.99757177
+    },
+    {
+      "word": "them",
+      "punctuated_word": "them",
+      "start": 40.465,
+      "end": 40.785,
+      "confidence": 0.9883841
+    },
+    {
+      "word": "out",
+      "punctuated_word": "out",
+      "start": 40.785,
+      "end": 41.024998,
+      "confidence": 0.9986841
+    },
+    {
+      "word": "of",
+      "punctuated_word": "of",
+      "start": 41.024998,
+      "end": 41.105,
+      "confidence": 0.9984384
+    },
+    {
+      "word": "their",
+      "punctuated_word": "their",
+      "start": 41.105,
+      "end": 41.345,
+      "confidence": 0.9991002
+    },
+    {
+      "word": "distress",
+      "punctuated_word": "distress,",
+      "start": 41.345,
+      "end": 41.825,
+      "confidence": 0.8981515
+    },
+    {
+      "word": "and",
+      "punctuated_word": "and",
+      "start": 41.825,
+      "end": 41.985,
+      "confidence": 0.99907887
+    },
+    {
+      "word": "he",
+      "punctuated_word": "he",
+      "start": 41.985,
+      "end": 42.145,
+      "confidence": 0.9972723
+    },
+    {
+      "word": "led",
+      "punctuated_word": "led",
+      "start": 42.145,
+      "end": 42.385,
+      "confidence": 0.98835844
+    },
+    {
+      "word": "them",
+      "punctuated_word": "them",
+      "start": 42.385,
+      "end": 42.625,
+      "confidence": 0.9983571
+    },
+    {
+      "word": "forth",
+      "punctuated_word": "forth",
+      "start": 42.625,
+      "end": 43.024998,
+      "confidence": 0.9733739
+    },
+    {
+      "word": "by",
+      "punctuated_word": "by",
+      "start": 43.024998,
+      "end": 43.505,
+      "confidence": 0.99763596
+    },
+    {
+      "word": "his",
+      "punctuated_word": "his",
+      "start": 43.505,
+      "end": 43.825,
+      "confidence": 0.9873865
+    },
+    {
+      "word": "right",
+      "punctuated_word": "right",
+      "start": 43.825,
+      "end": 44.145,
+      "confidence": 0.9997347
+    },
+    {
+      "word": "way",
+      "punctuated_word": "way.",
+      "start": 44.145,
+      "end": 44.465,
+      "confidence": 0.9989426
+    }
+  ],
+  "utterances": [
+    {
+      "start": 0.96,
+      "end": 1.9199998,
+      "transcript": "Welcome",
+      "words": [
+        {
+          "word": "welcome",
+          "punctuated_word": "Welcome",
+          "start": 0.96,
+          "end": 1.9199998,
+          "confidence": 0.53126425
+        }
+      ]
+    },
+    {
+      "start": 2.72,
+      "end": 6.16,
+      "transcript": "to the podcast. Today, we're gonna be talking about Psalm a 107.",
+      "words": [
+        {
+          "word": "to",
+          "punctuated_word": "to",
+          "start": 2.72,
+          "end": 2.8799999,
+          "confidence": 0.999635
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 2.8799999,
+          "end": 3.04,
+          "confidence": 0.99975604
+        },
+        {
+          "word": "podcast",
+          "punctuated_word": "podcast.",
+          "start": 3.04,
+          "end": 3.52,
+          "confidence": 0.9924643
+        },
+        {
+          "word": "today",
+          "punctuated_word": "Today,",
+          "start": 3.52,
+          "end": 3.9199998,
+          "confidence": 0.8903223
+        },
+        {
+          "word": "we're",
+          "punctuated_word": "we're",
+          "start": 3.9199998,
+          "end": 4,
+          "confidence": 0.9992967
+        },
+        {
+          "word": "gonna",
+          "punctuated_word": "gonna",
+          "start": 4,
+          "end": 4.16,
+          "confidence": 0.94929314
+        },
+        {
+          "word": "be",
+          "punctuated_word": "be",
+          "start": 4.16,
+          "end": 4.24,
+          "confidence": 0.9950062
+        },
+        {
+          "word": "talking",
+          "punctuated_word": "talking",
+          "start": 4.24,
+          "end": 4.48,
+          "confidence": 0.9991202
+        },
+        {
+          "word": "about",
+          "punctuated_word": "about",
+          "start": 4.48,
+          "end": 4.72,
+          "confidence": 0.9944435
+        },
+        {
+          "word": "psalm",
+          "punctuated_word": "Psalm",
+          "start": 4.72,
+          "end": 5.12,
+          "confidence": 0.9609185
+        },
+        {
+          "word": "a",
+          "punctuated_word": "a",
+          "start": 5.12,
+          "end": 5.3599997,
+          "confidence": 0.9856527
+        },
+        {
+          "word": "107",
+          "punctuated_word": "107.",
+          "start": 5.3599997,
+          "end": 6.16,
+          "confidence": 0.95325917
+        }
+      ]
+    },
+    {
+      "start": 6.16,
+      "end": 10.639999,
+      "transcript": "Thanksgiving to the Lord for his great works, his great works of deliverance.",
+      "words": [
+        {
+          "word": "thanksgiving",
+          "punctuated_word": "Thanksgiving",
+          "start": 6.16,
+          "end": 6.56,
+          "confidence": 0.66327524
+        },
+        {
+          "word": "to",
+          "punctuated_word": "to",
+          "start": 6.56,
+          "end": 6.8799996,
+          "confidence": 0.99907327
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 6.8799996,
+          "end": 6.96,
+          "confidence": 0.99509
+        },
+        {
+          "word": "lord",
+          "punctuated_word": "Lord",
+          "start": 6.96,
+          "end": 7.2,
+          "confidence": 0.7291543
+        },
+        {
+          "word": "for",
+          "punctuated_word": "for",
+          "start": 7.2,
+          "end": 7.44,
+          "confidence": 0.9983364
+        },
+        {
+          "word": "his",
+          "punctuated_word": "his",
+          "start": 7.44,
+          "end": 7.6,
+          "confidence": 0.9593242
+        },
+        {
+          "word": "great",
+          "punctuated_word": "great",
+          "start": 7.6,
+          "end": 7.9199996,
+          "confidence": 0.9992988
+        },
+        {
+          "word": "works",
+          "punctuated_word": "works,",
+          "start": 7.9199996,
+          "end": 8.559999,
+          "confidence": 0.86785567
+        },
+        {
+          "word": "his",
+          "punctuated_word": "his",
+          "start": 8.559999,
+          "end": 8.8,
+          "confidence": 0.9916338
+        },
+        {
+          "word": "great",
+          "punctuated_word": "great",
+          "start": 8.8,
+          "end": 9.04,
+          "confidence": 0.999181
+        },
+        {
+          "word": "works",
+          "punctuated_word": "works",
+          "start": 9.04,
+          "end": 9.28,
+          "confidence": 0.9994584
+        },
+        {
+          "word": "of",
+          "punctuated_word": "of",
+          "start": 9.28,
+          "end": 9.599999,
+          "confidence": 0.998944
+        },
+        {
+          "word": "deliverance",
+          "punctuated_word": "deliverance.",
+          "start": 9.599999,
+          "end": 10.639999,
+          "confidence": 0.9979596
+        }
+      ]
+    },
+    {
+      "start": 12.639999,
+      "end": 14.32,
+      "transcript": "So you ready? Here we go.",
+      "words": [
+        {
+          "word": "so",
+          "punctuated_word": "So",
+          "start": 12.639999,
+          "end": 12.88,
+          "confidence": 0.9898192
+        },
+        {
+          "word": "you",
+          "punctuated_word": "you",
+          "start": 12.88,
+          "end": 13.12,
+          "confidence": 0.7975034
+        },
+        {
+          "word": "ready",
+          "punctuated_word": "ready?",
+          "start": 13.12,
+          "end": 13.679999,
+          "confidence": 0.79311305
+        },
+        {
+          "word": "here",
+          "punctuated_word": "Here",
+          "start": 13.679999,
+          "end": 14,
+          "confidence": 0.9776538
+        },
+        {
+          "word": "we",
+          "punctuated_word": "we",
+          "start": 14,
+          "end": 14.08,
+          "confidence": 0.9952414
+        },
+        {
+          "word": "go",
+          "punctuated_word": "go.",
+          "start": 14.08,
+          "end": 14.32,
+          "confidence": 0.99953455
+        }
+      ]
+    },
+    {
+      "start": 15.285,
+      "end": 21.685,
+      "transcript": "Oh, give thanks to the Lord for he is good, for his mercy endures forever. Let the redeemed of the Lord say so,",
+      "words": [
+        {
+          "word": "oh",
+          "punctuated_word": "Oh,",
+          "start": 15.285,
+          "end": 15.525001,
+          "confidence": 0.9253292
+        },
+        {
+          "word": "give",
+          "punctuated_word": "give",
+          "start": 15.525001,
+          "end": 15.765,
+          "confidence": 0.9904427
+        },
+        {
+          "word": "thanks",
+          "punctuated_word": "thanks",
+          "start": 15.765,
+          "end": 16.085001,
+          "confidence": 0.9982938
+        },
+        {
+          "word": "to",
+          "punctuated_word": "to",
+          "start": 16.085001,
+          "end": 16.245,
+          "confidence": 0.9994562
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 16.245,
+          "end": 16.405,
+          "confidence": 0.9993383
+        },
+        {
+          "word": "lord",
+          "punctuated_word": "Lord",
+          "start": 16.405,
+          "end": 16.565,
+          "confidence": 0.76523024
+        },
+        {
+          "word": "for",
+          "punctuated_word": "for",
+          "start": 16.565,
+          "end": 16.725,
+          "confidence": 0.7530851
+        },
+        {
+          "word": "he",
+          "punctuated_word": "he",
+          "start": 16.725,
+          "end": 16.885,
+          "confidence": 0.96728843
+        },
+        {
+          "word": "is",
+          "punctuated_word": "is",
+          "start": 16.885,
+          "end": 17.125,
+          "confidence": 0.9996424
+        },
+        {
+          "word": "good",
+          "punctuated_word": "good,",
+          "start": 17.125,
+          "end": 17.605,
+          "confidence": 0.81165314
+        },
+        {
+          "word": "for",
+          "punctuated_word": "for",
+          "start": 17.845001,
+          "end": 18.005001,
+          "confidence": 0.9992225
+        },
+        {
+          "word": "his",
+          "punctuated_word": "his",
+          "start": 18.005001,
+          "end": 18.245,
+          "confidence": 0.9967253
+        },
+        {
+          "word": "mercy",
+          "punctuated_word": "mercy",
+          "start": 18.245,
+          "end": 18.565,
+          "confidence": 0.9997882
+        },
+        {
+          "word": "endures",
+          "punctuated_word": "endures",
+          "start": 18.565,
+          "end": 19.045,
+          "confidence": 0.99575686
+        },
+        {
+          "word": "forever",
+          "punctuated_word": "forever.",
+          "start": 19.045,
+          "end": 19.685,
+          "confidence": 0.8262344
+        },
+        {
+          "word": "let",
+          "punctuated_word": "Let",
+          "start": 19.685001,
+          "end": 19.845001,
+          "confidence": 0.82728183
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 19.845001,
+          "end": 20.005001,
+          "confidence": 0.99832577
+        },
+        {
+          "word": "redeemed",
+          "punctuated_word": "redeemed",
+          "start": 20.005001,
+          "end": 20.245,
+          "confidence": 0.89001286
+        },
+        {
+          "word": "of",
+          "punctuated_word": "of",
+          "start": 20.245,
+          "end": 20.485,
+          "confidence": 0.9919109
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 20.485,
+          "end": 20.565,
+          "confidence": 0.995891
+        },
+        {
+          "word": "lord",
+          "punctuated_word": "Lord",
+          "start": 20.565,
+          "end": 20.725,
+          "confidence": 0.9718579
+        },
+        {
+          "word": "say",
+          "punctuated_word": "say",
+          "start": 20.725,
+          "end": 21.045,
+          "confidence": 0.96686804
+        },
+        {
+          "word": "so",
+          "punctuated_word": "so,",
+          "start": 21.045,
+          "end": 21.685,
+          "confidence": 0.9168658
+        }
+      ]
+    },
+    {
+      "start": 21.845001,
+      "end": 44.465,
+      "transcript": "whom he has redeemed from the hand of the enemy and gathered up all the lands from the East and from the West, from the North and from the South. They wandered in the wilderness in the desolate way. They found no city to dwell in. Hunger and thirsty, their soul fainted in them. They cried out to the Lord in your trouble. And he delivered them out of their distress, and he led them forth by his right way.",
+      "words": [
+        {
+          "word": "whom",
+          "punctuated_word": "whom",
+          "start": 21.845001,
+          "end": 22.005001,
+          "confidence": 0.9964941
+        },
+        {
+          "word": "he",
+          "punctuated_word": "he",
+          "start": 22.005001,
+          "end": 22.645,
+          "confidence": 0.99604756
+        },
+        {
+          "word": "has",
+          "punctuated_word": "has",
+          "start": 22.645,
+          "end": 22.965,
+          "confidence": 0.99671566
+        },
+        {
+          "word": "redeemed",
+          "punctuated_word": "redeemed",
+          "start": 22.965,
+          "end": 23.445,
+          "confidence": 0.998351
+        },
+        {
+          "word": "from",
+          "punctuated_word": "from",
+          "start": 23.445,
+          "end": 23.685001,
+          "confidence": 0.9961979
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 23.685001,
+          "end": 23.845001,
+          "confidence": 0.9994066
+        },
+        {
+          "word": "hand",
+          "punctuated_word": "hand",
+          "start": 23.845001,
+          "end": 24.005001,
+          "confidence": 0.9995634
+        },
+        {
+          "word": "of",
+          "punctuated_word": "of",
+          "start": 24.005001,
+          "end": 24.165,
+          "confidence": 0.99980634
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 24.165,
+          "end": 24.244999,
+          "confidence": 0.9995963
+        },
+        {
+          "word": "enemy",
+          "punctuated_word": "enemy",
+          "start": 24.244999,
+          "end": 24.885,
+          "confidence": 0.9999218
+        },
+        {
+          "word": "and",
+          "punctuated_word": "and",
+          "start": 24.965,
+          "end": 25.285,
+          "confidence": 0.61245507
+        },
+        {
+          "word": "gathered",
+          "punctuated_word": "gathered",
+          "start": 25.285,
+          "end": 25.685001,
+          "confidence": 0.9681446
+        },
+        {
+          "word": "up",
+          "punctuated_word": "up",
+          "start": 25.685001,
+          "end": 25.845001,
+          "confidence": 0.69319457
+        },
+        {
+          "word": "all",
+          "punctuated_word": "all",
+          "start": 25.845001,
+          "end": 26.005001,
+          "confidence": 0.6091308
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 26.005001,
+          "end": 26.085,
+          "confidence": 0.9809482
+        },
+        {
+          "word": "lands",
+          "punctuated_word": "lands",
+          "start": 26.085,
+          "end": 26.645,
+          "confidence": 0.8389967
+        },
+        {
+          "word": "from",
+          "punctuated_word": "from",
+          "start": 26.645,
+          "end": 26.965,
+          "confidence": 0.54654825
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 26.965,
+          "end": 27.125,
+          "confidence": 0.99894637
+        },
+        {
+          "word": "east",
+          "punctuated_word": "East",
+          "start": 27.125,
+          "end": 27.365,
+          "confidence": 0.95243216
+        },
+        {
+          "word": "and",
+          "punctuated_word": "and",
+          "start": 27.365,
+          "end": 27.525,
+          "confidence": 0.9839282
+        },
+        {
+          "word": "from",
+          "punctuated_word": "from",
+          "start": 27.525,
+          "end": 27.685001,
+          "confidence": 0.99921215
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 27.685001,
+          "end": 27.845001,
+          "confidence": 0.99775213
+        },
+        {
+          "word": "west",
+          "punctuated_word": "West,",
+          "start": 27.845001,
+          "end": 28.005001,
+          "confidence": 0.98958445
+        },
+        {
+          "word": "from",
+          "punctuated_word": "from",
+          "start": 28.05,
+          "end": 28.369999,
+          "confidence": 0.9995951
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 28.369999,
+          "end": 28.449999,
+          "confidence": 0.9990957
+        },
+        {
+          "word": "north",
+          "punctuated_word": "North",
+          "start": 28.449999,
+          "end": 28.689999,
+          "confidence": 0.99004364
+        },
+        {
+          "word": "and",
+          "punctuated_word": "and",
+          "start": 28.689999,
+          "end": 28.849998,
+          "confidence": 0.90346533
+        },
+        {
+          "word": "from",
+          "punctuated_word": "from",
+          "start": 28.849998,
+          "end": 29.009998,
+          "confidence": 0.98219556
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 29.009998,
+          "end": 29.17,
+          "confidence": 0.99311274
+        },
+        {
+          "word": "south",
+          "punctuated_word": "South.",
+          "start": 29.17,
+          "end": 29.65,
+          "confidence": 0.95226055
+        },
+        {
+          "word": "they",
+          "punctuated_word": "They",
+          "start": 29.65,
+          "end": 29.81,
+          "confidence": 0.999198
+        },
+        {
+          "word": "wandered",
+          "punctuated_word": "wandered",
+          "start": 29.81,
+          "end": 30.21,
+          "confidence": 0.99407864
+        },
+        {
+          "word": "in",
+          "punctuated_word": "in",
+          "start": 30.21,
+          "end": 30.369999,
+          "confidence": 0.9855634
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 30.369999,
+          "end": 30.449999,
+          "confidence": 0.99718374
+        },
+        {
+          "word": "wilderness",
+          "punctuated_word": "wilderness",
+          "start": 30.449999,
+          "end": 30.849998,
+          "confidence": 0.99966544
+        },
+        {
+          "word": "in",
+          "punctuated_word": "in",
+          "start": 30.849998,
+          "end": 31.09,
+          "confidence": 0.86729586
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 31.09,
+          "end": 31.25,
+          "confidence": 0.893822
+        },
+        {
+          "word": "desolate",
+          "punctuated_word": "desolate",
+          "start": 31.25,
+          "end": 31.65,
+          "confidence": 0.99959105
+        },
+        {
+          "word": "way",
+          "punctuated_word": "way.",
+          "start": 31.65,
+          "end": 32.21,
+          "confidence": 0.98598766
+        },
+        {
+          "word": "they",
+          "punctuated_word": "They",
+          "start": 32.37,
+          "end": 32.61,
+          "confidence": 0.99948126
+        },
+        {
+          "word": "found",
+          "punctuated_word": "found",
+          "start": 32.61,
+          "end": 33.01,
+          "confidence": 0.99955875
+        },
+        {
+          "word": "no",
+          "punctuated_word": "no",
+          "start": 33.01,
+          "end": 33.41,
+          "confidence": 0.999603
+        },
+        {
+          "word": "city",
+          "punctuated_word": "city",
+          "start": 33.41,
+          "end": 33.649998,
+          "confidence": 0.9676398
+        },
+        {
+          "word": "to",
+          "punctuated_word": "to",
+          "start": 33.649998,
+          "end": 33.809998,
+          "confidence": 0.848641
+        },
+        {
+          "word": "dwell",
+          "punctuated_word": "dwell",
+          "start": 33.809998,
+          "end": 34.05,
+          "confidence": 0.9978974
+        },
+        {
+          "word": "in",
+          "punctuated_word": "in.",
+          "start": 34.05,
+          "end": 34.53,
+          "confidence": 0.773243
+        },
+        {
+          "word": "hunger",
+          "punctuated_word": "Hunger",
+          "start": 34.53,
+          "end": 34.93,
+          "confidence": 0.993314
+        },
+        {
+          "word": "and",
+          "punctuated_word": "and",
+          "start": 34.93,
+          "end": 35.09,
+          "confidence": 0.9983943
+        },
+        {
+          "word": "thirsty",
+          "punctuated_word": "thirsty,",
+          "start": 35.09,
+          "end": 35.809998,
+          "confidence": 0.9940511
+        },
+        {
+          "word": "their",
+          "punctuated_word": "their",
+          "start": 35.809998,
+          "end": 36.05,
+          "confidence": 0.9778466
+        },
+        {
+          "word": "soul",
+          "punctuated_word": "soul",
+          "start": 36.05,
+          "end": 36.29,
+          "confidence": 0.9987925
+        },
+        {
+          "word": "fainted",
+          "punctuated_word": "fainted",
+          "start": 36.29,
+          "end": 36.77,
+          "confidence": 0.99901175
+        },
+        {
+          "word": "in",
+          "punctuated_word": "in",
+          "start": 36.77,
+          "end": 36.85,
+          "confidence": 0.9846994
+        },
+        {
+          "word": "them",
+          "punctuated_word": "them.",
+          "start": 36.85,
+          "end": 37.41,
+          "confidence": 0.989929
+        },
+        {
+          "word": "they",
+          "punctuated_word": "They",
+          "start": 37.41,
+          "end": 37.57,
+          "confidence": 0.9981172
+        },
+        {
+          "word": "cried",
+          "punctuated_word": "cried",
+          "start": 37.57,
+          "end": 37.89,
+          "confidence": 0.99948466
+        },
+        {
+          "word": "out",
+          "punctuated_word": "out",
+          "start": 37.89,
+          "end": 38.05,
+          "confidence": 0.99894327
+        },
+        {
+          "word": "to",
+          "punctuated_word": "to",
+          "start": 38.05,
+          "end": 38.29,
+          "confidence": 0.99386793
+        },
+        {
+          "word": "the",
+          "punctuated_word": "the",
+          "start": 38.29,
+          "end": 38.449997,
+          "confidence": 0.99514645
+        },
+        {
+          "word": "lord",
+          "punctuated_word": "Lord",
+          "start": 38.449997,
+          "end": 38.61,
+          "confidence": 0.64894503
+        },
+        {
+          "word": "in",
+          "punctuated_word": "in",
+          "start": 38.61,
+          "end": 38.85,
+          "confidence": 0.79304934
+        },
+        {
+          "word": "your",
+          "punctuated_word": "your",
+          "start": 38.85,
+          "end": 39.329998,
+          "confidence": 0.53599906
+        },
+        {
+          "word": "trouble",
+          "punctuated_word": "trouble.",
+          "start": 39.105,
+          "end": 39.665,
+          "confidence": 0.80578756
+        },
+        {
+          "word": "and",
+          "punctuated_word": "And",
+          "start": 39.745,
+          "end": 39.905,
+          "confidence": 0.9968053
+        },
+        {
+          "word": "he",
+          "punctuated_word": "he",
+          "start": 39.905,
+          "end": 40.065,
+          "confidence": 0.9501061
+        },
+        {
+          "word": "delivered",
+          "punctuated_word": "delivered",
+          "start": 40.065,
+          "end": 40.465,
+          "confidence": 0.99757177
+        },
+        {
+          "word": "them",
+          "punctuated_word": "them",
+          "start": 40.465,
+          "end": 40.785,
+          "confidence": 0.9883841
+        },
+        {
+          "word": "out",
+          "punctuated_word": "out",
+          "start": 40.785,
+          "end": 41.024998,
+          "confidence": 0.9986841
+        },
+        {
+          "word": "of",
+          "punctuated_word": "of",
+          "start": 41.024998,
+          "end": 41.105,
+          "confidence": 0.9984384
+        },
+        {
+          "word": "their",
+          "punctuated_word": "their",
+          "start": 41.105,
+          "end": 41.345,
+          "confidence": 0.9991002
+        },
+        {
+          "word": "distress",
+          "punctuated_word": "distress,",
+          "start": 41.345,
+          "end": 41.825,
+          "confidence": 0.8981515
+        },
+        {
+          "word": "and",
+          "punctuated_word": "and",
+          "start": 41.825,
+          "end": 41.985,
+          "confidence": 0.99907887
+        },
+        {
+          "word": "he",
+          "punctuated_word": "he",
+          "start": 41.985,
+          "end": 42.145,
+          "confidence": 0.9972723
+        },
+        {
+          "word": "led",
+          "punctuated_word": "led",
+          "start": 42.145,
+          "end": 42.385,
+          "confidence": 0.98835844
+        },
+        {
+          "word": "them",
+          "punctuated_word": "them",
+          "start": 42.385,
+          "end": 42.625,
+          "confidence": 0.9983571
+        },
+        {
+          "word": "forth",
+          "punctuated_word": "forth",
+          "start": 42.625,
+          "end": 43.024998,
+          "confidence": 0.9733739
+        },
+        {
+          "word": "by",
+          "punctuated_word": "by",
+          "start": 43.024998,
+          "end": 43.505,
+          "confidence": 0.99763596
+        },
+        {
+          "word": "his",
+          "punctuated_word": "his",
+          "start": 43.505,
+          "end": 43.825,
+          "confidence": 0.9873865
+        },
+        {
+          "word": "right",
+          "punctuated_word": "right",
+          "start": 43.825,
+          "end": 44.145,
+          "confidence": 0.9997347
+        },
+        {
+          "word": "way",
+          "punctuated_word": "way.",
+          "start": 44.145,
+          "end": 44.465,
+          "confidence": 0.9989426
+        }
+      ]
+    }
+  ],
+  "createdAt": "2026-04-03T21:14:07.319Z"
+}
