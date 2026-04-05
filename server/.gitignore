@@ -4,3 +4,7 @@ dist/
 *.log
 .env
 .env.*
+# User recordings and transcripts — stored on Railway Volume, not in git
+data/**/*.webm
+data/**/*.mp3
+data/**/*.transcript.json
