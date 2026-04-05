@@ -392,6 +392,23 @@ app.get('/api/share/:username/:filename', (c) => {
   })
 })
 
+// ── Admin: bulk upload a file into a user's data dir (authenticated) ──
+// POST /api/admin/upload?username=X&filename=Y  body=raw file bytes
+// Used once to seed the Railway volume from local dev data.
+app.post('/api/admin/upload', async (c) => {
+  const auth = getAuth(c)
+  if (!auth) return c.json({ error: 'Unauthorized' }, 401)
+  const username = c.req.query('username') || auth.username
+  const filename = c.req.query('filename') || ''
+  if (!filename || filename.includes('..') || username.includes('..'))
+    return c.json({ error: 'Invalid params' }, 400)
+  const userDir = path.join(RECORDINGS_DIR, username)
+  if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true })
+  const buf = Buffer.from(await c.req.arrayBuffer())
+  fs.writeFileSync(path.join(userDir, filename), buf)
+  return c.json({ ok: true, path: `${username}/${filename}`, bytes: buf.length })
+})
+
 // ── Serve React client (static files + SPA fallback) ──────
 app.get('*', (c) => {
   const reqPath = c.req.path
