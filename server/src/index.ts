@@ -396,8 +396,8 @@ app.get('/api/share/:username/:filename', (c) => {
 // POST /api/admin/upload?username=X&filename=Y  body=raw file bytes
 // Used once to seed the Railway volume from local dev data.
 app.post('/api/admin/upload', async (c) => {
-  const auth = getAuth(c)
-  if (!auth) return c.json({ error: 'Unauthorized' }, 401)
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
   const username = c.req.query('username') || auth.username
   const filename = c.req.query('filename') || ''
   if (!filename || filename.includes('..') || username.includes('..'))
