@@ -169,14 +169,17 @@ export function useRecorder() {
       analyserRef.current = analyser
 
       // 7. Record the mixed stream
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : ''
+      // Prefer MP4/AAC (works on iOS Safari) — fall back to WebM/Opus (Chrome/Firefox)
+      const preferredTypes = [
+        'audio/mp4;codecs=mp4a.40.2', // AAC-LC in MP4 — iOS Safari ✓
+        'audio/mp4',                   // MP4 generic — iOS Safari ✓
+        'audio/webm;codecs=opus',      // Opus in WebM — Chrome/Firefox/Android ✓
+        'audio/webm',                  // WebM generic
+      ]
+      const mimeType = preferredTypes.find(t => MediaRecorder.isTypeSupported(t)) ?? ''
       const mr = new MediaRecorder(dest.stream, {
         ...(mimeType ? { mimeType } : {}),
-        audioBitsPerSecond: 192000,   // 192 kbps — much better than default ~64 kbps
+        audioBitsPerSecond: 192000,
       })
       chunksRef.current = []
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }

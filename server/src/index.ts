@@ -207,7 +207,10 @@ app.post('/api/recordings', async (c) => {
     if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true })
 
     const safeName = (name || 'recording').replace(/[^a-zA-Z0-9_-]/g, '_')
-    const filename = `${safeName}_${Date.now()}.webm`
+    // Preserve actual container format so browsers serve correct MIME type
+    const uploadedName = (file as File).name || ''
+    const ext = uploadedName.endsWith('.mp4') ? '.mp4' : '.webm'
+    const filename = `${safeName}_${Date.now()}${ext}`
     const filepath = path.join(userDir, filename)
     const buffer = Buffer.from(await file.arrayBuffer())
     fs.writeFileSync(filepath, buffer)
@@ -217,6 +220,14 @@ app.post('/api/recordings', async (c) => {
   }
 })
 
+function audioMime(filename: string): string {
+  const ext = path.extname(filename).toLowerCase()
+  if (ext === '.mp4') return 'audio/mp4'
+  if (ext === '.mp3') return 'audio/mpeg'
+  if (ext === '.wav') return 'audio/wav'
+  return 'audio/webm'
+}
+
 // ── List recordings — auth required ───────────────────────
 app.get('/api/recordings', (c) => {
   const auth = requireAuth(c)
@@ -225,7 +236,7 @@ app.get('/api/recordings', (c) => {
     const userDir = path.join(RECORDINGS_DIR, auth.username)
     if (!fs.existsSync(userDir)) return c.json({ recordings: [] })
     const files = fs.readdirSync(userDir)
-      .filter(f => f.endsWith('.webm') || f.endsWith('.wav') || f.endsWith('.mp3'))
+      .filter(f => f.endsWith('.webm') || f.endsWith('.mp4') || f.endsWith('.wav') || f.endsWith('.mp3'))
       .map(f => {
         const stat = fs.statSync(path.join(userDir, f))
         return { name: f, size: stat.size, createdAt: stat.birthtime.toISOString() }
@@ -247,7 +258,7 @@ app.get('/api/recordings/:filename', (c) => {
   if (!fs.existsSync(filePath)) return c.json({ error: 'Not found' }, 404)
   const buf = fs.readFileSync(filePath)
   return new Response(buf, {
-    headers: { 'Content-Type': 'audio/webm', 'Content-Length': String(buf.length), 'Accept-Ranges': 'bytes' },
+    headers: { 'Content-Type': audioMime(filename), 'Content-Length': String(buf.length), 'Accept-Ranges': 'bytes' },
   })
 })
 
@@ -275,7 +286,7 @@ app.get('/api/share/audio/:filename', (c) => {
     const filePath = path.join(RECORDINGS_DIR, user, filename)
     if (fs.existsSync(filePath)) {
       const buf = fs.readFileSync(filePath)
-      return new Response(buf, { headers: { 'Content-Type': 'audio/webm', 'Accept-Ranges': 'bytes' } })
+      return new Response(buf, { headers: { 'Content-Type': audioMime(filename), 'Content-Length': String(buf.length), 'Accept-Ranges': 'bytes' } })
     }
   }
   return c.json({ error: 'Not found' }, 404)
@@ -334,7 +345,7 @@ app.post('/api/transcripts/:filename', async (c) => {
   try {
     const audioBuffer = fs.readFileSync(filePath)
     const ext = path.extname(filename).toLowerCase()
-    const mime = ext === '.mp3' ? 'audio/mpeg' : ext === '.wav' ? 'audio/wav' : 'audio/webm'
+    const mime = audioMime(filename)
 
     const url = 'https://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&punctuate=true&utterances=true&words=true&diarize=false'
     const resp = await fetch(url, {
@@ -388,7 +399,7 @@ app.get('/api/share/:username/:filename', (c) => {
   if (!fs.existsSync(filePath)) return c.json({ error: 'Not found' }, 404)
   const buf = fs.readFileSync(filePath)
   return new Response(buf, {
-    headers: { 'Content-Type': 'audio/webm', 'Content-Length': String(buf.length), 'Accept-Ranges': 'bytes' },
+    headers: { 'Content-Type': audioMime(filename), 'Content-Length': String(buf.length), 'Accept-Ranges': 'bytes' },
   })
 })
 
