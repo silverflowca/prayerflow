@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
+import type { RecordingQuality } from './useSettings'
 
 export function useAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -88,10 +89,11 @@ export function useRecorder() {
   const animFrameRef = useRef<number>(0)
 
   /**
-   * start(bgAudioEl?, bgVolume?, micVolume?)
+   * start(bgAudioEl?, bgVolume?, micVolume?, quality?)
    *   bgAudioEl — the <audio> element playing the background music
    *   bgVolume  — 0..1 gain for the music in the mix
    *   micVolume — 0..1 gain for the mic in the mix
+   *   quality   — RecordingQuality from settings
    *
    * Uses Web Audio API to merge mic + music into a single MediaStream,
    * then records that with MediaRecorder so both end up in one file.
@@ -100,7 +102,11 @@ export function useRecorder() {
     bgAudioEl?: HTMLAudioElement | null,
     bgVolume = 0.7,
     micVolume = 1.0,
+    quality?: RecordingQuality,
   ) => {
+    const sampleRate  = quality?.sampleRate  ?? 48000
+    const channels    = quality?.channels    ?? 1
+    const bitrate     = quality?.bitrate     ?? 192
     setError(null)
     setPaused(false)
     try {
@@ -112,13 +118,13 @@ export function useRecorder() {
           echoCancellation: false,   // off — degrades voice quality for music recording
           noiseSuppression: false,   // off — would cut out quiet phrases
           autoGainControl: false,    // off — causes volume pumping / dropouts
-          sampleRate: 48000,
-          channelCount: 1,
+          sampleRate,
+          channelCount: channels,
         },
       })
 
-      // 2. Create AudioContext at 48kHz to match mic
-      const ctx = new AudioContext({ sampleRate: 48000 })
+      // 2. Create AudioContext to match mic settings
+      const ctx = new AudioContext({ sampleRate })
       audioCtxRef.current = ctx
 
       // Resume context immediately (some browsers start it suspended)
@@ -179,7 +185,7 @@ export function useRecorder() {
       const mimeType = preferredTypes.find(t => MediaRecorder.isTypeSupported(t)) ?? ''
       const mr = new MediaRecorder(dest.stream, {
         ...(mimeType ? { mimeType } : {}),
-        audioBitsPerSecond: 192000,
+        audioBitsPerSecond: bitrate * 1000,
       })
       chunksRef.current = []
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }

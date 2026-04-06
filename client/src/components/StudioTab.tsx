@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useAudioPlayer, useRecorder, fmt, fmtBytes } from '../hooks/useAudio'
+import type { RecordingQuality } from '../hooks/useSettings'
 
 interface Props {
   selectedTrack: string | null
   onChangeTrack: () => void
   autoTranscribe: boolean
+  recQuality: RecordingQuality
   onOpenLyrics: (filename: string) => void
   apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>
 }
@@ -33,7 +35,7 @@ function WaveformBars({ amplitude, bars = 32, isRec = false }: { amplitude: numb
   )
 }
 
-export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, onOpenLyrics, apiFetch }: Props) {
+export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQuality, onOpenLyrics, apiFetch }: Props) {
   const bgPlayer = useAudioPlayer()
   const recorder = useRecorder()
 
@@ -81,7 +83,7 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, onOpen
     await new Promise(r => setTimeout(r, 100))
 
     // Pass the <audio> element so the recorder can tap into it and mix it
-    await recorder.start(bgPlayer.audioRef.current, bgVol, micVol)
+    await recorder.start(bgPlayer.audioRef.current, bgVol, micVol, recQuality)
   }
 
   const handleStopRecording = async () => {

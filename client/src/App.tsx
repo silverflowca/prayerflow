@@ -233,6 +233,7 @@ export default function App() {
                   selectedTrack={selectedTrack}
                   onChangeTrack={() => setTab('library')}
                   autoTranscribe={settings.autoTranscribe}
+                  recQuality={settings.recQuality}
                   onOpenLyrics={setLyricsFilename}
                   apiFetch={apiFetch}
                 />

@@ -1,29 +1,30 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Default: Tokyo Night — overridden at runtime by ThemeContext */
-  --bg:        #1a1b26;
-  --surface:   #16161e;
-  --surface2:  #24283b;
-  --surface3:  #2f334d;
-  --border:    #2a2f45;
-  --text:      #b5bcc9;
-  --text-muted:#565f89;
-  --accent:    #7aa2f7;
-  --accent-2:  #5d7fdb;
-  --primary:   #eda685;
-  --success:   #9ece6a;
-  --warning:   #e0af68;
-  --danger:    #f7768e;
-  --info:      #bb9af7;
-  --cyan:      #7dcfff;
-  --orange:    #ff9e64;
-  --red:       #f7768e;
-  --green:     #9ece6a;
+  /* Default: Apple Light — overridden at runtime by useSettings */
+  --bg:        #f2f2f7;
+  --surface:   #ffffff;
+  --surface2:  #e5e5ea;
+  --surface3:  #d1d1d6;
+  --border:    #c6c6c8;
+  --text:      #1c1c1e;
+  --text-muted:#8e8e93;
+  --accent:    #007aff;
+  --accent-2:  #0062cc;
+  --primary:   #007aff;
+  --success:   #34c759;
+  --warning:   #ff9500;
+  --danger:    #ff3b30;
+  --info:      #5856d6;
+  --cyan:      #32ade6;
+  --orange:    #ff9500;
+  --red:       #ff3b30;
+  --green:     #34c759;
+  color-scheme: light;
   /* Layout & font (not theme-controlled) */
-  --radius:    8px;
-  --radius-lg: 12px;
-  --font:      'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  --radius:    10px;
+  --radius-lg: 14px;
+  --font:      -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
   --sidebar-w: 240px;
   --header-h:  50px;
 }
@@ -38,7 +39,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  color-scheme: light dark;  /* updated at runtime by ThemeContext */
+  color-scheme: light;  /* updated at runtime by useSettings */
 }
 
 /* ── Smooth theme transitions (from devflow) ─────────── */
