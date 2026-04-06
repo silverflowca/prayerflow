@@ -105,22 +105,45 @@ export function useRecorder() {
     setPaused(false)
     try {
       bgAudioRef.current = bgAudioEl ?? null
-      // 1. Get microphone
-      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
-      // 2. Create AudioContext
-      const ctx = new AudioContext()
+      // 1. Get microphone — request highest quality possible
+      const micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,   // off — degrades voice quality for music recording
+          noiseSuppression: false,   // off — would cut out quiet phrases
+          autoGainControl: false,    // off — causes volume pumping / dropouts
+          sampleRate: 48000,
+          channelCount: 1,
+        },
+      })
+
+      // 2. Create AudioContext at 48kHz to match mic
+      const ctx = new AudioContext({ sampleRate: 48000 })
       audioCtxRef.current = ctx
+
+      // Resume context immediately (some browsers start it suspended)
+      if (ctx.state === 'suspended') await ctx.resume()
 
       // 3. Destination — this is what we record
       const dest = ctx.createMediaStreamDestination()
 
-      // 4. Mic → gain → dest
+      // 4. Mic → gain → compressor → dest
+      //    DynamicsCompressor evens out the voice so it stays audible
+      //    throughout the recording without getting lost under the music.
       const micSource = ctx.createMediaStreamSource(micStream)
       const micGain = ctx.createGain()
-      micGain.gain.value = micVolume
+      micGain.gain.value = micVolume * 1.5   // slight boost so voice cuts through
+
+      const compressor = ctx.createDynamicsCompressor()
+      compressor.threshold.value = -24   // start compressing at -24 dBFS
+      compressor.knee.value = 10
+      compressor.ratio.value = 4         // 4:1 ratio — gentle, transparent
+      compressor.attack.value = 0.003    // 3 ms — catches transients fast
+      compressor.release.value = 0.25   // 250 ms — smooth release
+
       micSource.connect(micGain)
-      micGain.connect(dest)
+      micGain.connect(compressor)
+      compressor.connect(dest)
 
       // 5. Background music → gain → dest  (if an audio element is playing)
       if (bgAudioEl && bgAudioEl.src) {
@@ -133,24 +156,27 @@ export function useRecorder() {
           // Also route music to speakers so you can hear it while recording
           bgGain.connect(ctx.destination)
         } catch {
-          // If the element was already connected to a different ctx, skip
+          // Element already connected to this context — reconnect not needed
         }
       }
 
       // 6. Analyser on the mixed output for the waveform
       const analyser = ctx.createAnalyser()
-      analyser.fftSize = 64
-      dest.stream.getAudioTracks().forEach(() => {
-        const analyserSource = ctx.createMediaStreamSource(dest.stream)
-        analyserSource.connect(analyser)
-      })
+      analyser.fftSize = 256
+      analyser.smoothingTimeConstant = 0.7
+      const analyserSource = ctx.createMediaStreamSource(dest.stream)
+      analyserSource.connect(analyser)
       analyserRef.current = analyser
 
       // 7. Record the mixed stream
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : ''
       const mr = new MediaRecorder(dest.stream, {
-        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : 'audio/webm',
+        ...(mimeType ? { mimeType } : {}),
+        audioBitsPerSecond: 192000,   // 192 kbps — much better than default ~64 kbps
       })
       chunksRef.current = []
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }

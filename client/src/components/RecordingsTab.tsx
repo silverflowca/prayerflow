@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fmtBytes } from '../hooks/useAudio'
 
 interface Recording {
@@ -22,12 +22,13 @@ export function RecordingsTab({ onOpenLyrics, apiFetch }: Props) {
   const [recordings, setRecordings] = useState<Recording[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
-  // track which recordings have a transcript: name → true/false/undefined(unknown)
   const [hasTranscript, setHasTranscript] = useState<Record<string, boolean>>({})
   const [transcribing, setTranscribing] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
-  // Blob URLs for inline audio playback (avoids auth header issue with <audio src>)
+  // Blob URLs — loaded on demand when user clicks play
   const [audioBlobUrls, setAudioBlobUrls] = useState<Record<string, string>>({})
+  const [loadingAudio, setLoadingAudio] = useState<Record<string, boolean>>({})
+  const blobUrlsRef = useRef<Record<string, string>>({})
 
   const load = () => {
     setLoading(true)
@@ -37,17 +38,10 @@ export function RecordingsTab({ onOpenLyrics, apiFetch }: Props) {
         const recs: Recording[] = d.recordings || []
         setRecordings(recs)
         setLoading(false)
-        // Check transcripts + pre-fetch blob URLs for playback
+        // Only check transcript existence (HEAD-like, no body download)
         recs.forEach(rec => {
           apiFetch(`/api/transcripts/${encodeURIComponent(rec.name)}`)
             .then(r => setHasTranscript(prev => ({ ...prev, [rec.name]: r.ok })))
-            .catch(() => {})
-          apiFetch(`/api/recordings/${encodeURIComponent(rec.name)}`)
-            .then(r => r.blob())
-            .then(blob => {
-              const url = URL.createObjectURL(blob)
-              setAudioBlobUrls(prev => ({ ...prev, [rec.name]: url }))
-            })
             .catch(() => {})
         })
       })
@@ -57,18 +51,35 @@ export function RecordingsTab({ onOpenLyrics, apiFetch }: Props) {
   useEffect(() => {
     load()
     return () => {
-      // Revoke blob URLs on unmount
-      setAudioBlobUrls(prev => {
-        Object.values(prev).forEach(URL.revokeObjectURL)
-        return {}
-      })
+      // Revoke all blob URLs on unmount
+      Object.values(blobUrlsRef.current).forEach(URL.revokeObjectURL)
     }
   }, [])
+
+  // Fetch blob only when user wants to play
+  const handlePlay = async (name: string) => {
+    if (audioBlobUrls[name]) return // already loaded
+    setLoadingAudio(prev => ({ ...prev, [name]: true }))
+    try {
+      const res = await apiFetch(`/api/recordings/${encodeURIComponent(name)}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      blobUrlsRef.current[name] = url
+      setAudioBlobUrls(prev => ({ ...prev, [name]: url }))
+    } catch {}
+    setLoadingAudio(prev => ({ ...prev, [name]: false }))
+  }
 
   const handleDelete = async (name: string) => {
     if (!confirm(`Delete "${name}"?`)) return
     setDeleting(name)
     await apiFetch(`/api/recordings/${encodeURIComponent(name)}`, { method: 'DELETE' })
+    // Revoke blob URL if loaded
+    if (blobUrlsRef.current[name]) {
+      URL.revokeObjectURL(blobUrlsRef.current[name])
+      delete blobUrlsRef.current[name]
+      setAudioBlobUrls(prev => { const n = { ...prev }; delete n[name]; return n })
+    }
     setDeleting(null)
     load()
   }
@@ -133,13 +144,23 @@ export function RecordingsTab({ onOpenLyrics, apiFetch }: Props) {
             {fmtDate(rec.createdAt)}
           </span>
           <div className="rec-row-actions">
-            {/* Inline playback — uses pre-fetched blob URL so auth header is included */}
-            {audioBlobUrls[rec.name] && (
+            {/* Inline playback — lazy loaded on first play click */}
+            {audioBlobUrls[rec.name] ? (
               <audio
                 controls
+                autoPlay
                 src={audioBlobUrls[rec.name]}
                 style={{height:28, accentColor:'var(--accent)', maxWidth:180}}
               />
+            ) : (
+              <button
+                className="btn btn-ghost btn-sm"
+                title="Play recording"
+                onClick={() => handlePlay(rec.name)}
+                disabled={loadingAudio[rec.name]}
+              >
+                {loadingAudio[rec.name] ? '⏳' : '▶'}
+              </button>
             )}
             {/* Share link */}
             <button
