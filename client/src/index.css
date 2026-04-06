@@ -420,9 +420,8 @@ input[type="range"].vertical {
 }
 .library-chips {
   display: flex; gap: 6px;
-  overflow-x: auto; scrollbar-width: none; padding-bottom: 2px;
+  flex-wrap: wrap; padding-bottom: 2px;
 }
-.library-chips::-webkit-scrollbar { display: none; }
 .chip {
   flex-shrink: 0;
   background: var(--surface2); border: 1px solid var(--border);
