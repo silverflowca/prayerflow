@@ -100,7 +100,9 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
     setSavedFilename(null)
     try {
       const fd = new FormData()
-      fd.append('audio', lastBlob, `${recName}.webm`)
+      // Use the correct extension based on the actual MIME type of the blob
+      const ext = lastBlob.type.includes('mp4') ? 'mp4' : 'webm'
+      fd.append('audio', lastBlob, `${recName}.${ext}`)
       fd.append('name', recName)
       const res = await apiFetch('/api/recordings', { method: 'POST', body: fd })
       const json = await res.json()
@@ -138,6 +140,56 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
 
   return (
     <div>
+      {/* ── Save panel — shown immediately after stopping, above everything ── */}
+      {lastUrl && (
+        <div className="card mb-16" style={{
+          border: '2px solid var(--accent)',
+          background: 'color-mix(in srgb, var(--accent) 6%, var(--surface))',
+        }}>
+          <div className="card-title" style={{ color: 'var(--accent)' }}>💾 Ready to Save</div>
+          <audio controls src={lastUrl} style={{ width: '100%', marginBottom: 12 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Name:</span>
+            <input
+              style={{
+                flex: 1, minWidth: 140,
+                background: 'var(--bg)', border: '1px solid var(--border)',
+                borderRadius: 'var(--radius)', color: 'var(--text)',
+                fontSize: 13, fontFamily: 'var(--font)', padding: '6px 10px', outline: 'none',
+              }}
+              value={recName}
+              onChange={e => setRecName(e.target.value)}
+              disabled={saving || transcribing}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={handleSave} disabled={saving || transcribing}
+              style={{ fontSize: 15, padding: '10px 24px' }}>
+              {saving ? 'Saving…' : transcribing ? '⏳ Transcribing…' : '💾 Save Recording'}
+            </button>
+            {savedFilename && !saving && !transcribing && (
+              <button className="btn btn-ghost" onClick={() => onOpenLyrics(savedFilename)}>
+                🎤 View Lyrics
+              </button>
+            )}
+            <button className="btn btn-danger btn-sm" onClick={handleDiscard} disabled={saving || transcribing}>
+              🗑 Discard
+            </button>
+          </div>
+          {saveMsg && (
+            <div style={{ marginTop: 10, fontSize: 13, color: saveMsg.startsWith('✓') ? 'var(--success)' : 'var(--danger)' }}>
+              {transcribing && <span style={{ marginRight: 6 }}>⏳</span>}
+              {saveMsg}
+            </div>
+          )}
+          {autoTranscribe && !savedFilename && !saving && (
+            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+              Auto-transcribe is on — transcript will be created after saving
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Background track */}
       <div className="card mb-16">
         <div className="card-title">Background Music Track</div>
@@ -290,42 +342,6 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
         </div>
       </div>
 
-      {/* Last take */}
-      {lastUrl && (
-        <div className="card">
-          <div className="card-title">Last Take — Review & Save</div>
-          <div style={{ marginBottom: 14 }}>
-            <audio controls src={lastUrl} style={{ width: '100%' }} />
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
-            Duration: ~{fmt(recorder.seconds)} · Format: WebM/Opus · Contains: voice + music mixed
-          </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving || transcribing}>
-              {saving ? 'Saving…' : transcribing ? '⏳ Transcribing…' : '💾 Save Recording'}
-            </button>
-            {savedFilename && !saving && !transcribing && (
-              <button className="btn btn-ghost" onClick={() => onOpenLyrics(savedFilename)}>
-                🎤 View Lyrics
-              </button>
-            )}
-            <button className="btn btn-danger" onClick={handleDiscard} disabled={saving || transcribing}>
-              🗑 Discard
-            </button>
-          </div>
-          {saveMsg && (
-            <div style={{ marginTop: 10, fontSize: 13, color: saveMsg.startsWith('✓') ? 'var(--success)' : 'var(--danger)' }}>
-              {transcribing && <span style={{ marginRight: 6 }}>⏳</span>}
-              {saveMsg}
-            </div>
-          )}
-          {autoTranscribe && !savedFilename && !saving && (
-            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)' }}>
-              Auto-transcribe is on — transcript will be created after saving
-            </div>
-          )}
-        </div>
-      )}
 
       {!selectedTrack && !recorder.recording && !lastUrl && (
         <div style={{
