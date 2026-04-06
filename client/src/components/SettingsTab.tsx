@@ -1,4 +1,4 @@
-import { AppSettings, COLOR_SCHEMES, ColorScheme, RecBitrate, RecordingQuality, estimateFileSizeMB } from '../hooks/useSettings'
+import { AppSettings, COLOR_SCHEMES, ColorScheme, RecBitrate, RecSampleRate, RecordingQuality, estimateFileSizeMB } from '../hooks/useSettings'
 
 interface Props {
   settings: AppSettings
@@ -157,13 +157,30 @@ function SettingRow({ label, sub, children }: { label: string; sub?: string; chi
   )
 }
 
+const BITRATE_OPTIONS: RecBitrate[]    = [32, 48, 64, 96, 128, 160, 192, 256, 320]
+const SAMPLERATE_OPTIONS: RecSampleRate[] = [8000, 16000, 22050, 32000, 44100, 48000, 96000]
+
+function fmtSR(sr: number) {
+  if (sr < 1000) return `${sr} Hz`
+  return `${(sr / 1000).toFixed(sr % 1000 === 0 ? 0 : 1)} kHz`
+}
+
+function qualityLabel(q: RecordingQuality): string {
+  if (q.bitrate <= 64  && q.sampleRate <= 22050) return 'Voice / Phone'
+  if (q.bitrate <= 96  && q.sampleRate <= 44100) return 'Voice / Podcast'
+  if (q.bitrate <= 160 && q.sampleRate <= 44100) return 'Good'
+  if (q.bitrate <= 192 && q.sampleRate <= 48000) return 'Studio'
+  return 'Hi-Fi'
+}
+
 export function SettingsTab({ settings, onUpdate, username, onLogout }: Props) {
   const q = settings.recQuality
 
   const updateQ = (patch: Partial<RecordingQuality>) =>
     onUpdate({ recQuality: { ...q, ...patch } })
 
-  const bitrateOptions: RecBitrate[] = [64, 128, 192, 256, 320]
+  const bitrateIdx    = BITRATE_OPTIONS.indexOf(q.bitrate)    === -1 ? 6 : BITRATE_OPTIONS.indexOf(q.bitrate)
+  const samplerateIdx = SAMPLERATE_OPTIONS.indexOf(q.sampleRate) === -1 ? 5 : SAMPLERATE_OPTIONS.indexOf(q.sampleRate)
 
   return (
     <div style={{ padding: '0 0 32px' }}>
@@ -234,17 +251,67 @@ export function SettingsTab({ settings, onUpdate, username, onLogout }: Props) {
       <SectionHeader title="Recording Quality" />
       <GroupCard>
 
-        {/* Bitrate */}
+        {/* Quality label */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 4px' }}>
+          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Preset</span>
+          <span style={{
+            fontSize: 13, fontWeight: 600, padding: '2px 12px', borderRadius: 20,
+            background: 'var(--accent)', color: '#fff',
+          }}>{qualityLabel(q)}</span>
+        </div>
+
+        <Divider />
+
+        {/* Bitrate slider */}
         <SettingRow
-          label="Bitrate"
-          sub="Higher = better quality, larger file"
+          label={`Bitrate — ${q.bitrate} kbps`}
+          sub="32k = small file / voice call · 192k = studio · 320k = lossless-like"
         >
-          <Segmented<RecBitrate>
-            options={bitrateOptions}
-            value={q.bitrate}
-            onChange={v => updateQ({ bitrate: v })}
-            format={v => `${v}k`}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 28, textAlign: 'right' }}>32k</span>
+            <input
+              type="range" min={0} max={BITRATE_OPTIONS.length - 1} step={1}
+              value={bitrateIdx}
+              onChange={e => updateQ({ bitrate: BITRATE_OPTIONS[+e.target.value] })}
+              style={{ flex: 1, accentColor: 'var(--accent)' }}
+            />
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 30 }}>320k</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 2 }}>
+            {BITRATE_OPTIONS.map((b, i) => (
+              <span key={b} style={{
+                fontSize: 10, color: i === bitrateIdx ? 'var(--accent)' : 'var(--text-muted)',
+                fontWeight: i === bitrateIdx ? 700 : 400,
+              }}>{b}k</span>
+            ))}
+          </div>
+        </SettingRow>
+
+        <Divider />
+
+        {/* Sample rate slider */}
+        <SettingRow
+          label={`Sample Rate — ${fmtSR(q.sampleRate)}`}
+          sub="8 kHz = phone · 22 kHz = FM radio · 44.1 kHz = CD · 48 kHz = studio · 96 kHz = hi-res"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 28, textAlign: 'right' }}>8k</span>
+            <input
+              type="range" min={0} max={SAMPLERATE_OPTIONS.length - 1} step={1}
+              value={samplerateIdx}
+              onChange={e => updateQ({ sampleRate: SAMPLERATE_OPTIONS[+e.target.value] })}
+              style={{ flex: 1, accentColor: 'var(--accent)' }}
+            />
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 30 }}>96k</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 2 }}>
+            {SAMPLERATE_OPTIONS.map((sr, i) => (
+              <span key={sr} style={{
+                fontSize: 10, color: i === samplerateIdx ? 'var(--accent)' : 'var(--text-muted)',
+                fontWeight: i === samplerateIdx ? 700 : 400,
+              }}>{fmtSR(sr)}</span>
+            ))}
+          </div>
         </SettingRow>
 
         <Divider />
@@ -252,28 +319,13 @@ export function SettingsTab({ settings, onUpdate, username, onLogout }: Props) {
         {/* Channels */}
         <SettingRow
           label="Channels"
-          sub="Mono is half the size with no audible difference for voice"
+          sub="Mono = half the size, fine for voice · Stereo = spatial music mix"
         >
           <Segmented<1 | 2>
             options={[1, 2]}
             value={q.channels}
             onChange={v => updateQ({ channels: v })}
             format={v => v === 1 ? 'Mono' : 'Stereo'}
-          />
-        </SettingRow>
-
-        <Divider />
-
-        {/* Sample rate */}
-        <SettingRow
-          label="Sample Rate"
-          sub="44.1 kHz = CD quality · 48 kHz = studio standard"
-        >
-          <Segmented<44100 | 48000>
-            options={[44100, 48000]}
-            value={q.sampleRate}
-            onChange={v => updateQ({ sampleRate: v })}
-            format={v => v === 44100 ? '44.1 kHz' : '48 kHz'}
           />
         </SettingRow>
 

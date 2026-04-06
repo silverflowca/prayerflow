@@ -2,9 +2,9 @@ import { useState, useCallback, useEffect } from 'react'
 
 export type ColorScheme = 'apple-light' | 'tokyo-night' | 'catppuccin' | 'gruvbox' | 'dracula' | 'nord'
 
-export type RecBitrate   = 64 | 128 | 192 | 256 | 320
-export type RecChannels  = 1 | 2
-export type RecSampleRate = 44100 | 48000
+export type RecBitrate    = 32 | 48 | 64 | 96 | 128 | 160 | 192 | 256 | 320
+export type RecChannels   = 1 | 2
+export type RecSampleRate = 8000 | 16000 | 22050 | 32000 | 44100 | 48000 | 96000
 
 export interface RecordingQuality {
   bitrate:    RecBitrate
