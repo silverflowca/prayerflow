@@ -389,6 +389,42 @@ input[type="range"].vertical {
 .tab:hover { color: var(--text); }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
+/* ── Studio layout ──────────────────────────────────── */
+/* Same pattern as library: fill the .page, sticky footer for controls */
+.studio-root {
+  display: flex; flex-direction: column;
+  margin: -20px; height: calc(100% + 40px); overflow: hidden;
+}
+.studio-scroll {
+  flex: 1; overflow-y: auto; padding: 16px 20px 12px;
+}
+.studio-footer {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-top: 2px solid var(--border);
+  padding: 0;
+}
+.studio-footer-inner {
+  padding: 14px 20px 16px;
+}
+.studio-name-input {
+  flex: 1; min-width: 120px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 13px; font-family: var(--font);
+  padding: 6px 10px; outline: none;
+}
+.studio-name-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* Mobile: ensure footer sits above the bottom nav bar */
+@media (max-width: 639px) {
+  .studio-root { margin: -20px; height: calc(100% + 40px); }
+  .studio-footer { padding-bottom: env(safe-area-inset-bottom, 0); }
+}
+
 /* ── Library layout ─────────────────────────────────── */
 /* The .page has overflow-y:auto — library fills it with its own
    sticky header + scrollable body so the page itself doesn't scroll. */
@@ -451,6 +487,113 @@ input[type="range"].vertical {
 /* ── Toolbar ─────────────────────────────────────────── */
 .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
 .toolbar-right { margin-left: auto; display: flex; gap: 8px; }
+
+/* ── Deck (multi-track) ─────────────────────────────── */
+.deck-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px; flex-wrap: wrap;
+}
+.deck-header-meta {
+  font-size: 12px; color: var(--text-muted); flex: 1;
+}
+
+/* Exclusive toggle (iOS style) */
+.excl-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  cursor: pointer; user-select: none; font-size: 12px; color: var(--text-muted);
+}
+.excl-track {
+  position: relative; width: 36px; height: 20px;
+  background: var(--surface3); border-radius: 10px;
+  transition: background 0.2s;
+}
+.excl-track.on { background: var(--accent); }
+.excl-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.excl-track.on .excl-thumb { transform: translateX(16px); }
+
+/* Deck rows */
+.deck-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--radius);
+  border: 1px solid var(--border); background: var(--bg);
+  margin-bottom: 5px; font-size: 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.deck-row:hover { border-color: var(--surface3); background: var(--surface2); }
+.deck-row-active {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent) !important;
+  background: color-mix(in srgb, var(--accent) 7%, transparent) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.deck-row-name {
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 500; color: var(--text);
+}
+.deck-row-vol {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.deck-row-vol input[type="range"] { width: 70px; }
+.deck-row-vol span { font-size: 11px; color: var(--text-muted); width: 28px; text-align: right; }
+.deck-row-btns { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* Track picker modal */
+.deck-picker-overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.deck-picker {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%; max-width: 460px;
+  max-height: 70vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  overflow: hidden;
+}
+.deck-picker-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.deck-picker-head input {
+  flex: 1; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 13px; font-family: var(--font);
+  padding: 6px 10px; outline: none;
+}
+.deck-picker-head input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+.deck-picker-list {
+  flex: 1; overflow-y: auto; padding: 8px;
+}
+.deck-picker-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--radius);
+  cursor: pointer; font-size: 13px;
+  border: 1px solid transparent;
+  transition: background 0.1s, border-color 0.1s;
+}
+.deck-picker-row:hover {
+  background: var(--surface2);
+  border-color: var(--border);
+}
+.deck-picker-row span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 639px) {
+  .deck-row-vol input[type="range"] { width: 50px; }
+  .deck-picker { max-height: 80vh; }
+}
 
 /* ── Animations ─────────────────────────────────────── */
 @keyframes pulse-rec {

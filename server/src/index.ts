@@ -274,6 +274,44 @@ app.delete('/api/recordings/:filename', (c) => {
   return c.json({ ok: true })
 })
 
+// ── Rename a recording — auth required ────────────────────
+app.patch('/api/recordings/:filename', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const oldFilename = decodeURIComponent(c.req.param('filename'))
+  if (oldFilename.includes('..')) return c.json({ error: 'Invalid' }, 400)
+
+  const body = await c.req.json().catch(() => ({}))
+  let newName: string = (body.name ?? '').trim()
+  if (!newName) return c.json({ error: 'name is required' }, 400)
+
+  // Preserve original extension
+  const ext = path.extname(oldFilename)
+  // Strip extension from newName if user typed it, then re-add
+  const baseName = newName.replace(/\.(webm|mp4|mp3|wav)$/i, '')
+  const newFilename = baseName + ext
+
+  if (newFilename.includes('..') || newFilename.includes('/')) return c.json({ error: 'Invalid name' }, 400)
+
+  const userDir = path.join(RECORDINGS_DIR, auth.username)
+  const oldPath = path.join(userDir, oldFilename)
+  const newPath = path.join(userDir, newFilename)
+
+  if (!fs.existsSync(oldPath)) return c.json({ error: 'Not found' }, 404)
+  if (oldPath !== newPath && fs.existsSync(newPath)) return c.json({ error: 'A file with that name already exists' }, 409)
+
+  fs.renameSync(oldPath, newPath)
+
+  // Also rename the transcript if one exists
+  const oldTranscript = path.join(userDir, oldFilename.replace(/\.[^.]+$/, '') + '.transcript.json')
+  const newTranscript = path.join(userDir, newFilename.replace(/\.[^.]+$/, '') + '.transcript.json')
+  if (fs.existsSync(oldTranscript)) {
+    fs.renameSync(oldTranscript, newTranscript)
+  }
+
+  return c.json({ ok: true, filename: newFilename })
+})
+
 // ── Public share: audio stream (no auth) ──────────────────
 app.get('/api/share/audio/:filename', (c) => {
   const filename = decodeURIComponent(c.req.param('filename'))

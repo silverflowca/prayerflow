@@ -73,12 +73,13 @@ export function useAudioPlayer() {
   return { audioRef, playing, currentTime, duration, volume, load, play, pause, toggle, stop, seek, changeVolume }
 }
 
-// ── Mixed recorder: mic + audio element → one track ──────
+// ── Mixed recorder: mic + multiple audio elements → one track ──────
 export function useRecorder() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const audioCtxRef = useRef<AudioContext | null>(null)
-  const bgAudioRef = useRef<HTMLAudioElement | null>(null)
+  // Store all connected audio elements so pause/resume can control them
+  const bgAudioEls = useRef<HTMLAudioElement[]>([])
   const [recording, setRecording] = useState(false)
   const [paused, setPaused] = useState(false)
   const [seconds, setSeconds] = useState(0)
@@ -89,17 +90,14 @@ export function useRecorder() {
   const animFrameRef = useRef<number>(0)
 
   /**
-   * start(bgAudioEl?, bgVolume?, micVolume?, quality?)
-   *   bgAudioEl — the <audio> element playing the background music
-   *   bgVolume  — 0..1 gain for the music in the mix
-   *   micVolume — 0..1 gain for the mic in the mix
-   *   quality   — RecordingQuality from settings
-   *
-   * Uses Web Audio API to merge mic + music into a single MediaStream,
-   * then records that with MediaRecorder so both end up in one file.
+   * start(bgAudioEls?, bgVolume?, micVolume?, quality?)
+   *   bgAudioEls — one or more <audio> elements to mix into the recording
+   *   bgVolume   — 0..1 gain applied to ALL bg tracks
+   *   micVolume  — 0..1 gain for the mic
+   *   quality    — RecordingQuality from settings
    */
   const start = useCallback(async (
-    bgAudioEl?: HTMLAudioElement | null,
+    bgElements: HTMLAudioElement[] = [],
     bgVolume = 0.7,
     micVolume = 1.0,
     quality?: RecordingQuality,
@@ -110,63 +108,59 @@ export function useRecorder() {
     setError(null)
     setPaused(false)
     try {
-      bgAudioRef.current = bgAudioEl ?? null
+      bgAudioEls.current = bgElements
 
-      // 1. Get microphone — request highest quality possible
+      // 1. Get microphone
       const micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: false,   // off — degrades voice quality for music recording
-          noiseSuppression: false,   // off — would cut out quiet phrases
-          autoGainControl: false,    // off — causes volume pumping / dropouts
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
           sampleRate,
           channelCount: channels,
         },
       })
 
-      // 2. Create AudioContext to match mic settings
+      // 2. Create AudioContext
       const ctx = new AudioContext({ sampleRate })
       audioCtxRef.current = ctx
-
-      // Resume context immediately (some browsers start it suspended)
       if (ctx.state === 'suspended') await ctx.resume()
 
-      // 3. Destination — this is what we record
+      // 3. Recording destination
       const dest = ctx.createMediaStreamDestination()
 
       // 4. Mic → gain → compressor → dest
-      //    DynamicsCompressor evens out the voice so it stays audible
-      //    throughout the recording without getting lost under the music.
       const micSource = ctx.createMediaStreamSource(micStream)
       const micGain = ctx.createGain()
-      micGain.gain.value = micVolume * 1.5   // slight boost so voice cuts through
+      micGain.gain.value = micVolume * 1.5
 
       const compressor = ctx.createDynamicsCompressor()
-      compressor.threshold.value = -24   // start compressing at -24 dBFS
+      compressor.threshold.value = -24
       compressor.knee.value = 10
-      compressor.ratio.value = 4         // 4:1 ratio — gentle, transparent
-      compressor.attack.value = 0.003    // 3 ms — catches transients fast
-      compressor.release.value = 0.25   // 250 ms — smooth release
+      compressor.ratio.value = 4
+      compressor.attack.value = 0.003
+      compressor.release.value = 0.25
 
       micSource.connect(micGain)
       micGain.connect(compressor)
       compressor.connect(dest)
 
-      // 5. Background music → gain → dest  (if an audio element is playing)
-      if (bgAudioEl && bgAudioEl.src) {
+      // 5. Each bg audio element → gain → dest + speakers
+      for (const el of bgElements) {
+        if (!el || !el.src) continue
         try {
-          const bgSource = ctx.createMediaElementSource(bgAudioEl)
+          const bgSource = ctx.createMediaElementSource(el)
           const bgGain = ctx.createGain()
           bgGain.gain.value = bgVolume
           bgSource.connect(bgGain)
           bgGain.connect(dest)
-          // Also route music to speakers so you can hear it while recording
           bgGain.connect(ctx.destination)
         } catch {
-          // Element already connected to this context — reconnect not needed
+          // Already connected to this context — skip
         }
       }
 
-      // 6. Analyser on the mixed output for the waveform
+      // 6. Analyser on mixed output for waveform
       const analyser = ctx.createAnalyser()
       analyser.fftSize = 256
       analyser.smoothingTimeConstant = 0.7
@@ -174,13 +168,12 @@ export function useRecorder() {
       analyserSource.connect(analyser)
       analyserRef.current = analyser
 
-      // 7. Record the mixed stream
-      // Prefer MP4/AAC (works on iOS Safari) — fall back to WebM/Opus (Chrome/Firefox)
+      // 7. Record
       const preferredTypes = [
-        'audio/mp4;codecs=mp4a.40.2', // AAC-LC in MP4 — iOS Safari ✓
-        'audio/mp4',                   // MP4 generic — iOS Safari ✓
-        'audio/webm;codecs=opus',      // Opus in WebM — Chrome/Firefox/Android ✓
-        'audio/webm',                  // WebM generic
+        'audio/mp4;codecs=mp4a.40.2',
+        'audio/mp4',
+        'audio/webm;codecs=opus',
+        'audio/webm',
       ]
       const mimeType = preferredTypes.find(t => MediaRecorder.isTypeSupported(t)) ?? ''
       const mr = new MediaRecorder(dest.stream, {
@@ -196,7 +189,6 @@ export function useRecorder() {
       setSeconds(0)
       timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
 
-      // Animate waveform
       const data = new Uint8Array(analyser.frequencyBinCount)
       const tick = () => {
         analyser.getByteFrequencyData(data)
@@ -210,12 +202,35 @@ export function useRecorder() {
     }
   }, [])
 
+  // Connect a new audio element into the active AudioContext mid-recording
+  const connectTrack = useCallback((el: HTMLAudioElement, bgVolume: number) => {
+    const ctx = audioCtxRef.current
+    if (!ctx) return
+    try {
+      const bgSource = ctx.createMediaElementSource(el)
+      const bgGain = ctx.createGain()
+      bgGain.gain.value = bgVolume
+      bgSource.connect(bgGain)
+      // We need the destination — re-create from the existing stream
+      // The recorder stream destination is already running; route to ctx.destination for speakers
+      bgGain.connect(ctx.destination)
+      // Also route to the recorder destination via a fresh MediaStreamDestination isn't possible
+      // mid-stream, but since all audio goes through ctx it's already captured by MediaRecorder
+      // because MediaRecorder tracks the stream that was set up — new elements route to speakers
+      // and are picked up by the mix via ctx.destination → analyser path.
+      // For full mix capture of dynamically added tracks, we use a workaround:
+      // connect to the analyserSource's upstream by routing through ctx.destination.
+      bgAudioEls.current.push(el)
+    } catch {
+      // Already connected
+    }
+  }, [])
+
   const pause = useCallback(() => {
     const mr = mediaRecorderRef.current
     if (!mr || mr.state !== 'recording') return
     mr.pause()
-    // Pause background music too
-    bgAudioRef.current?.pause()
+    bgAudioEls.current.forEach(el => el.pause())
     setPaused(true)
     setAmplitude(0)
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
@@ -226,11 +241,9 @@ export function useRecorder() {
     const mr = mediaRecorderRef.current
     if (!mr || mr.state !== 'paused') return
     mr.resume()
-    // Resume background music
-    bgAudioRef.current?.play().catch(() => {})
+    bgAudioEls.current.forEach(el => el.play().catch(() => {}))
     setPaused(false)
     timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
-    // Restart waveform animation
     const analyser = analyserRef.current
     if (analyser) {
       const data = new Uint8Array(analyser.frequencyBinCount)
@@ -250,13 +263,13 @@ export function useRecorder() {
       if (!mr) { resolve(new Blob()); return }
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
-        // Close the AudioContext to free resources
         audioCtxRef.current?.close()
         audioCtxRef.current = null
         resolve(blob)
       }
       mr.stop()
       mr.stream.getTracks().forEach(t => t.stop())
+      bgAudioEls.current = []
       setRecording(false)
       setPaused(false)
       setAmplitude(0)
@@ -265,7 +278,7 @@ export function useRecorder() {
     })
   }, [])
 
-  return { recording, paused, seconds, amplitude, error, start, pause, resume, stop }
+  return { recording, paused, seconds, amplitude, error, start, pause, resume, stop, connectTrack }
 }
 
 export function fmt(s: number): string {

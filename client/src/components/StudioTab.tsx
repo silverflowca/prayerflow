@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useAudioPlayer, useRecorder, fmt, fmtBytes } from '../hooks/useAudio'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { useRecorder, fmt, fmtBytes } from '../hooks/useAudio'
 import type { RecordingQuality } from '../hooks/useSettings'
 
 interface Props {
@@ -9,6 +9,16 @@ interface Props {
   recQuality: RecordingQuality
   onOpenLyrics: (filename: string) => void
   apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>
+}
+
+// ── Track in the deck ──────────────────────────────────────
+interface DeckTrack {
+  id: string          // unique key
+  trackId: string     // library track path e.g. 'calm/song.mp3'
+  name: string        // display name
+  vol: number         // 0..1
+  playing: boolean
+  audioEl: HTMLAudioElement | null
 }
 
 function cleanName(filename: string) {
@@ -21,27 +31,160 @@ function cleanName(filename: string) {
     .replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function WaveformBars({ amplitude, bars = 32, isRec = false }: { amplitude: number; bars?: number; isRec?: boolean }) {
+function WaveformBars({ amplitude, bars = 28, isRec = false }: { amplitude: number; bars?: number; isRec?: boolean }) {
   return (
-    <div className={`waveform-bar${amplitude > 0.05 ? ' active' : ''}`}>
+    <div className={`waveform-bar${amplitude > 0.05 ? ' active' : ''}`} style={{ marginBottom: 0, height: 44 }}>
       {Array.from({ length: bars }, (_, i) => {
         const phase = (i / bars) * Math.PI * 2
         const h = amplitude > 0.05
-          ? Math.max(4, Math.abs(Math.sin(phase + Date.now() / 200)) * amplitude * 50)
-          : 4
+          ? Math.max(3, Math.abs(Math.sin(phase + Date.now() / 200)) * amplitude * 40)
+          : 3
         return <div key={i} className={`wave-col${isRec ? ' rec' : ''}`} style={{ height: `${h}px` }} />
       })}
     </div>
   )
 }
 
+// ── Small search modal for adding a track to deck ─────────
+function TrackPicker({
+  onPick,
+  onClose,
+  apiFetch,
+}: {
+  onPick: (trackId: string, name: string) => void
+  onClose: () => void
+  apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>
+}) {
+  const [tracks, setTracks] = useState<{ id: string; name: string; folder: string }[]>([])
+  const [search, setSearch] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    inputRef.current?.focus()
+    apiFetch('/api/tracks')
+      .then(r => r.json())
+      .then(d => setTracks(d.tracks || []))
+      .catch(() => {})
+  }, [])
+
+  const filtered = tracks.filter(t =>
+    search.length < 1 ||
+    t.id.toLowerCase().includes(search.toLowerCase()) ||
+    cleanName(t.name).toLowerCase().includes(search.toLowerCase())
+  ).slice(0, 40)
+
+  return (
+    <div className="deck-picker-overlay" onClick={onClose}>
+      <div className="deck-picker" onClick={e => e.stopPropagation()}>
+        <div className="deck-picker-head">
+          <span style={{ fontWeight: 700, fontSize: 14 }}>Add Track</span>
+          <input
+            ref={inputRef}
+            placeholder="🔍 Search tracks…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <button className="btn btn-ghost btn-sm" onClick={onClose} style={{ padding: '2px 8px' }}>✕</button>
+        </div>
+        <div className="deck-picker-list">
+          {filtered.map(t => (
+            <div
+              key={t.id}
+              className="deck-picker-row"
+              onClick={() => { onPick(t.id, t.name); onClose() }}
+            >
+              <span style={{ fontSize: 13 }}>🎵</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {cleanName(t.name)}
+                </div>
+                {t.folder && (
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t.folder}</div>
+                )}
+              </div>
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
+              No tracks found
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── One row in the deck ────────────────────────────────────
+function DeckRow({
+  track,
+  exclusive,
+  isRecording,
+  onPlay,
+  onPause,
+  onStop,
+  onVol,
+  onRemove,
+}: {
+  track: DeckTrack
+  exclusive: boolean
+  isRecording: boolean
+  onPlay: (id: string) => void
+  onPause: (id: string) => void
+  onStop: (id: string) => void
+  onVol: (id: string, v: number) => void
+  onRemove: (id: string) => void
+}) {
+  return (
+    <div className={`deck-row${track.playing ? ' deck-row-active' : ''}`}>
+      <span style={{ fontSize: 15, flexShrink: 0 }}>{track.playing ? '🔊' : '🎵'}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {cleanName(track.name)}
+        </div>
+        <input
+          type="range" min={0} max={1} step={0.02}
+          value={track.vol}
+          onChange={e => onVol(track.id, parseFloat(e.target.value))}
+          style={{ width: '100%', height: 3, accentColor: 'var(--accent)', marginTop: 4 }}
+        />
+      </div>
+      <span style={{ fontSize: 10, color: 'var(--text-muted)', width: 26, textAlign: 'right', flexShrink: 0 }}>
+        {Math.round(track.vol * 100)}%
+      </span>
+      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+        {track.playing ? (
+          <button className="btn btn-ghost btn-sm" style={{ padding: '3px 8px' }} onClick={() => onPause(track.id)}>⏸</button>
+        ) : (
+          <button className="btn btn-primary btn-sm" style={{ padding: '3px 8px' }} onClick={() => onPlay(track.id)}>▶</button>
+        )}
+        <button className="btn btn-ghost btn-sm" style={{ padding: '3px 8px' }} onClick={() => onStop(track.id)}>⏹</button>
+        {!isRecording && (
+          <button className="btn btn-danger btn-sm" style={{ padding: '3px 8px' }} onClick={() => onRemove(track.id)}>✕</button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────
 export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQuality, onOpenLyrics, apiFetch }: Props) {
-  const bgPlayer = useAudioPlayer()
   const recorder = useRecorder()
 
-  const [bgVol,  setBgVol]  = useState(0.5)
+  // Deck: list of tracks + their audio elements
+  const [deck, setDeck] = useState<DeckTrack[]>([])
+  const audioElsRef = useRef<Map<string, HTMLAudioElement>>(new Map())
+
+  // Exclusive mode: only one track plays at a time
+  const [exclusive, setExclusive] = useState(true)
+
+  // Global mic volume
   const [micVol, setMicVol] = useState(1.0)
 
+  // Picker open
+  const [pickerOpen, setPickerOpen] = useState(false)
+
+  // Recording / save state
   const [recName, setRecName] = useState('scripture_reading')
   const [saving,  setSaving]  = useState(false)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
@@ -50,7 +193,7 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
   const [transcribing, setTranscribing] = useState(false)
   const [savedFilename, setSavedFilename] = useState<string | null>(null)
 
-  // Re-render waveform while recording
+  // Re-render waveform
   const [, setTick] = useState(0)
   useEffect(() => {
     if (!recorder.recording) return
@@ -58,49 +201,135 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
     return () => clearInterval(id)
   }, [recorder.recording])
 
-  // Load background track when selection changes
+  // Seed deck with the pre-selected track when it changes
   useEffect(() => {
-    if (selectedTrack) {
-      bgPlayer.load(`/api/tracks/${selectedTrack.split('/').map(encodeURIComponent).join('/')}`)
-    }
+    if (!selectedTrack) return
+    setDeck(prev => {
+      // If it's already in the deck don't add again
+      if (prev.some(t => t.trackId === selectedTrack)) return prev
+      const name = selectedTrack.split('/').pop() ?? selectedTrack
+      const id = `track-${Date.now()}`
+      return [{ id, trackId: selectedTrack, name, vol: 0.5, playing: false, audioEl: null }, ...prev]
+    })
   }, [selectedTrack])
 
-  useEffect(() => { bgPlayer.changeVolume(bgVol) }, [bgVol])
+  // Create / retrieve audio element for a deck entry
+  const getOrCreateAudioEl = useCallback((trackId: string, deckId: string): HTMLAudioElement => {
+    if (audioElsRef.current.has(deckId)) return audioElsRef.current.get(deckId)!
+    const el = new Audio()
+    el.src = `/api/tracks/${trackId.split('/').map(encodeURIComponent).join('/')}`
+    el.loop = true
+    el.preload = 'none'
+    audioElsRef.current.set(deckId, el)
+    return el
+  }, [])
 
-  const handleStartRecording = async () => {
-    setSaveMsg(null)
-    setLastBlob(null)
-    setLastUrl(null)
-
-    // Load + play music first (if a track is selected)
-    if (selectedTrack) {
-      bgPlayer.load(`/api/tracks/${selectedTrack.split('/').map(encodeURIComponent).join('/')}`)
-      await new Promise(r => setTimeout(r, 150))
-      bgPlayer.play()
+  // Clean up audio elements on unmount
+  useEffect(() => {
+    return () => {
+      audioElsRef.current.forEach(el => { el.pause(); el.src = '' })
     }
+  }, [])
 
-    // Small delay so the audio element has time to start
-    await new Promise(r => setTimeout(r, 100))
+  const addTrack = (trackId: string, name: string) => {
+    const id = `track-${Date.now()}`
+    setDeck(prev => [...prev, { id, trackId, name, vol: 0.5, playing: false, audioEl: null }])
+  }
 
-    // Pass the <audio> element so the recorder can tap into it and mix it
-    await recorder.start(bgPlayer.audioRef.current, bgVol, micVol, recQuality)
+  const playTrack = (deckId: string) => {
+    setDeck(prev => prev.map(t => {
+      if (t.id === deckId) {
+        const el = getOrCreateAudioEl(t.trackId, t.id)
+        el.volume = t.vol
+        el.play().catch(() => {})
+        // If recording and track isn't yet wired into context, connect it now
+        if (recorder.recording) {
+          recorder.connectTrack(el, t.vol)
+        }
+        return { ...t, playing: true, audioEl: el }
+      }
+      // In exclusive mode pause all others
+      if (exclusive) {
+        const otherEl = audioElsRef.current.get(t.id)
+        otherEl?.pause()
+        return { ...t, playing: false }
+      }
+      return t
+    }))
+  }
+
+  const pauseTrack = (deckId: string) => {
+    setDeck(prev => prev.map(t => {
+      if (t.id !== deckId) return t
+      audioElsRef.current.get(deckId)?.pause()
+      return { ...t, playing: false }
+    }))
+  }
+
+  const stopTrack = (deckId: string) => {
+    setDeck(prev => prev.map(t => {
+      if (t.id !== deckId) return t
+      const el = audioElsRef.current.get(deckId)
+      if (el) { el.pause(); el.currentTime = 0 }
+      return { ...t, playing: false }
+    }))
+  }
+
+  const setVol = (deckId: string, v: number) => {
+    setDeck(prev => prev.map(t => {
+      if (t.id !== deckId) return t
+      const el = audioElsRef.current.get(deckId)
+      if (el) el.volume = v
+      return { ...t, vol: v }
+    }))
+  }
+
+  const removeTrack = (deckId: string) => {
+    const el = audioElsRef.current.get(deckId)
+    if (el) { el.pause(); el.src = '' }
+    audioElsRef.current.delete(deckId)
+    setDeck(prev => prev.filter(t => t.id !== deckId))
+  }
+
+  const stopAllTracks = () => {
+    audioElsRef.current.forEach(el => { el.pause(); el.currentTime = 0 })
+    setDeck(prev => prev.map(t => ({ ...t, playing: false })))
+  }
+
+  // Start recording — pass all currently playing audio elements
+  const handleStartRecording = async () => {
+    setSaveMsg(null); setLastBlob(null); setLastUrl(null)
+
+    // Play all deck tracks that are queued (already playing)
+    // Build list of active audio elements
+    const activeEls: HTMLAudioElement[] = []
+    const playingDeck: string[] = []
+
+    deck.forEach(t => {
+      if (t.playing) {
+        const el = audioElsRef.current.get(t.id)
+        if (el) { activeEls.push(el); playingDeck.push(t.id) }
+      }
+    })
+
+    await new Promise(r => setTimeout(r, 80))
+
+    // Use global vol 0.5 as default bg; individual vols are set on the elements already
+    await recorder.start(activeEls, 0.5, micVol, recQuality)
   }
 
   const handleStopRecording = async () => {
     const blob = await recorder.stop()
-    bgPlayer.stop()
+    stopAllTracks()
     setLastBlob(blob)
     setLastUrl(URL.createObjectURL(blob))
   }
 
   const handleSave = async () => {
     if (!lastBlob) return
-    setSaving(true)
-    setSaveMsg(null)
-    setSavedFilename(null)
+    setSaving(true); setSaveMsg(null); setSavedFilename(null)
     try {
       const fd = new FormData()
-      // Use the correct extension based on the actual MIME type of the blob
       const ext = lastBlob.type.includes('mp4') ? 'mp4' : 'webm'
       fd.append('audio', lastBlob, `${recName}.${ext}`)
       fd.append('name', recName)
@@ -110,8 +339,7 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
         setSavedFilename(json.filename)
         setSaveMsg(`✓ Saved as ${json.filename} (${fmtBytes(json.size)})`)
         if (autoTranscribe) {
-          setTranscribing(true)
-          setSaveMsg(`✓ Saved · Transcribing…`)
+          setTranscribing(true); setSaveMsg(`✓ Saved · Transcribing…`)
           try {
             const tr = await apiFetch(`/api/transcripts/${encodeURIComponent(json.filename)}`, { method: 'POST' })
             const td = await tr.json()
@@ -125,240 +353,213 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
       } else {
         setSaveMsg(`✗ ${json.error}`)
       }
-    } catch {
-      setSaveMsg('✗ Save failed')
-    }
+    } catch { setSaveMsg('✗ Save failed') }
     setSaving(false)
   }
 
   const handleDiscard = () => {
     if (lastUrl) URL.revokeObjectURL(lastUrl)
-    setLastBlob(null)
-    setLastUrl(null)
-    setSaveMsg(null)
+    setLastBlob(null); setLastUrl(null); setSaveMsg(null); setSavedFilename(null)
   }
 
+  const panelState: 'idle' | 'recording' | 'review' =
+    lastUrl ? 'review' : recorder.recording ? 'recording' : 'idle'
+
+  const playingCount = deck.filter(t => t.playing).length
+
   return (
-    <div>
-      {/* ── Save panel — shown immediately after stopping, above everything ── */}
-      {lastUrl && (
-        <div className="card mb-16" style={{
-          border: '2px solid var(--accent)',
-          background: 'color-mix(in srgb, var(--accent) 6%, var(--surface))',
-        }}>
-          <div className="card-title" style={{ color: 'var(--accent)' }}>💾 Ready to Save</div>
-          <audio controls src={lastUrl} style={{ width: '100%', marginBottom: 12 }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Name:</span>
-            <input
-              style={{
-                flex: 1, minWidth: 140,
-                background: 'var(--bg)', border: '1px solid var(--border)',
-                borderRadius: 'var(--radius)', color: 'var(--text)',
-                fontSize: 13, fontFamily: 'var(--font)', padding: '6px 10px', outline: 'none',
-              }}
-              value={recName}
-              onChange={e => setRecName(e.target.value)}
-              disabled={saving || transcribing}
-            />
-          </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving || transcribing}
-              style={{ fontSize: 15, padding: '10px 24px' }}>
-              {saving ? 'Saving…' : transcribing ? '⏳ Transcribing…' : '💾 Save Recording'}
-            </button>
-            {savedFilename && !saving && !transcribing && (
-              <button className="btn btn-ghost" onClick={() => onOpenLyrics(savedFilename)}>
-                🎤 View Lyrics
-              </button>
-            )}
-            <button className="btn btn-danger btn-sm" onClick={handleDiscard} disabled={saving || transcribing}>
-              🗑 Discard
-            </button>
-          </div>
-          {saveMsg && (
-            <div style={{ marginTop: 10, fontSize: 13, color: saveMsg.startsWith('✓') ? 'var(--success)' : 'var(--danger)' }}>
-              {transcribing && <span style={{ marginRight: 6 }}>⏳</span>}
-              {saveMsg}
-            </div>
-          )}
-          {autoTranscribe && !savedFilename && !saving && (
-            <div style={{ marginTop: 6, fontSize: 11, color: 'var(--text-muted)' }}>
-              Auto-transcribe is on — transcript will be created after saving
-            </div>
-          )}
-        </div>
+    <div className="studio-root">
+      {pickerOpen && (
+        <TrackPicker
+          onPick={addTrack}
+          onClose={() => setPickerOpen(false)}
+          apiFetch={apiFetch}
+        />
       )}
 
-      {/* Background track */}
-      <div className="card mb-16">
-        <div className="card-title">Background Music Track</div>
-        {selectedTrack ? (
-          <div className="studio-selected-track">
-            <span style={{ fontSize: 20 }}>🎵</span>
-            <div style={{ flex: 1 }}>
-              <div className="studio-track-label">{cleanName(selectedTrack.split('/').pop() ?? selectedTrack)}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{selectedTrack}</div>
-            </div>
-            <button className="btn btn-ghost btn-sm" onClick={onChangeTrack}>Change track</button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0' }}>
-            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>No track selected.</span>
-            <button className="btn btn-primary btn-sm" onClick={onChangeTrack}>Browse Library →</button>
-          </div>
-        )}
+      {/* ── TOP SCROLL ZONE ── */}
+      <div className="studio-scroll">
 
-        {selectedTrack && !recorder.recording && (
-          <>
-            <div className="progress-row">
-              <span className="progress-time">{fmt(bgPlayer.currentTime)}</span>
-              <div
-                className="progress-wrap"
-                onClick={e => {
-                  const r = e.currentTarget.getBoundingClientRect()
-                  bgPlayer.seek(((e.clientX - r.left) / r.width) * bgPlayer.duration)
+        {/* ── TRACK DECK ── */}
+        <div className="card" style={{ marginBottom: 12, padding: '12px 14px' }}>
+          {/* Deck header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '.07em', flex: 1 }}>
+              🎛 Music Deck {deck.length > 0 && <span style={{ opacity: .6 }}>· {deck.length} track{deck.length !== 1 ? 's' : ''}{playingCount > 0 ? ` · ${playingCount} playing` : ''}</span>}
+            </span>
+            {/* Exclusive toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                {exclusive ? '1 at a time' : 'Multi-play'}
+              </span>
+              <button
+                onClick={() => setExclusive(e => !e)}
+                title={exclusive ? 'Only one track plays at a time. Click to allow multiple.' : 'Multiple tracks can play. Click for exclusive mode.'}
+                style={{
+                  width: 38, height: 22, borderRadius: 11,
+                  background: exclusive ? 'var(--accent)' : 'var(--surface2)',
+                  border: 'none', cursor: 'pointer', position: 'relative',
+                  transition: 'background .15s', padding: 0, flexShrink: 0,
                 }}
               >
-                <div className="progress-fill" style={{
-                  width: bgPlayer.duration ? `${(bgPlayer.currentTime / bgPlayer.duration) * 100}%` : '0%',
+                <span style={{
+                  position: 'absolute', top: 2, left: exclusive ? 18 : 2,
+                  width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                  transition: 'left .15s cubic-bezier(.4,0,.2,1)',
+                  boxShadow: '0 1px 4px rgba(0,0,0,.25)',
                 }} />
-              </div>
-              <span className="progress-time">{fmt(bgPlayer.duration)}</span>
+              </button>
             </div>
-            <div className="transport">
-              <div className="transport-group">
-                <button className="btn btn-ghost btn-sm" onClick={bgPlayer.stop}>⏹</button>
-                <button className="btn btn-primary btn-sm" onClick={bgPlayer.toggle}>
-                  {bgPlayer.playing ? '⏸ Pause' : '▶ Preview'}
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {recorder.recording && (
-          <div style={{ fontSize: 12, color: 'var(--cyan)', padding: '6px 0' }}>
-            🎵 Music is playing and being mixed into your recording
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setPickerOpen(true)}
+              style={{ padding: '4px 12px', fontSize: 12 }}
+            >
+              + Add Track
+            </button>
           </div>
-        )}
 
-        <audio ref={bgPlayer.audioRef} style={{ display: 'none' }} loop />
+          {/* Empty state */}
+          {deck.length === 0 && (
+            <div style={{ padding: '10px 0 4px', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
+              No tracks in deck. <button className="btn btn-ghost btn-sm" style={{ fontSize: 12 }} onClick={() => setPickerOpen(true)}>Browse library →</button>
+            </div>
+          )}
+
+          {/* Track rows */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {deck.map(t => (
+              <DeckRow
+                key={t.id}
+                track={t}
+                exclusive={exclusive}
+                isRecording={recorder.recording}
+                onPlay={playTrack}
+                onPause={pauseTrack}
+                onStop={stopTrack}
+                onVol={setVol}
+                onRemove={removeTrack}
+              />
+            ))}
+          </div>
+
+          {/* Hint while recording */}
+          {recorder.recording && deck.length > 0 && (
+            <div style={{ marginTop: 8, fontSize: 11, color: 'var(--cyan)' }}>
+              🎵 {playingCount > 0 ? `${playingCount} track${playingCount !== 1 ? 's' : ''} mixing into recording` : 'Tap ▶ to add a track to the mix'}
+            </div>
+          )}
+        </div>
+
+        {/* ── MIC VOLUME ── */}
+        <div className="card" style={{ marginBottom: 0, padding: '10px 14px' }}>
+          <div className="vol-row" style={{ marginBottom: 0 }}>
+            <span className="vol-label" style={{ fontSize: 11 }}>🎙 My voice</span>
+            <input type="range" min={0} max={1} step={0.02}
+              value={micVol} onChange={e => setMicVol(parseFloat(e.target.value))} />
+            <span className="vol-value">{Math.round(micVol * 100)}%</span>
+          </div>
+        </div>
       </div>
 
-      {/* Mix levels */}
-      <div className="card mb-16">
-        <div className="card-title">Mix Levels</div>
-        <div className="vol-row">
-          <span className="vol-label">🎵 Music</span>
-          <input type="range" min={0} max={1} step={0.02}
-            value={bgVol} onChange={e => setBgVol(parseFloat(e.target.value))} />
-          <span className="vol-value">{Math.round(bgVol * 100)}%</span>
-        </div>
-        <div className="vol-row" style={{ marginBottom: 0 }}>
-          <span className="vol-label">🎙 My voice</span>
-          <input type="range" min={0} max={1} step={0.02}
-            value={micVol} onChange={e => setMicVol(parseFloat(e.target.value))} />
-          <span className="vol-value">{Math.round(micVol * 100)}%</span>
-        </div>
-      </div>
+      {/* ── BOTTOM FIXED PANEL ── */}
+      <div className="studio-footer">
 
-      {/* Recording */}
-      <div className="card mb-16">
-        <div className="card-title">Voice Recording</div>
-
-        {recorder.error && (
-          <div style={{ color: 'var(--danger)', marginBottom: 12, fontSize: 13 }}>
-            ⚠ {recorder.error}
-          </div>
-        )}
-
-        {recorder.recording && (
-          <div className="rec-status">
-            <div className={`rec-dot${recorder.paused ? ' paused' : ''}`} />
-            <div className="rec-timer">{fmt(recorder.seconds)}</div>
-            <span style={{ fontSize: 13, color: recorder.paused ? 'var(--text-muted)' : 'var(--text-muted)' }}>
-              {recorder.paused ? 'Paused — click Resume to continue' : 'Recording — mic + music mixed together'}
-            </span>
-          </div>
-        )}
-
-        <WaveformBars amplitude={recorder.amplitude} isRec={recorder.recording} />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>Session name</span>
-          <input
-            style={{
-              background: 'var(--bg)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)', color: 'var(--text)',
-              fontSize: 13, fontFamily: 'var(--font)', padding: '6px 10px',
-              outline: 'none', flex: 1,
-            }}
-            value={recName}
-            onChange={e => setRecName(e.target.value)}
-            disabled={recorder.recording}
-            placeholder="e.g. psalm_23_reading"
-          />
-        </div>
-
-        <div className="transport">
-          {!recorder.recording ? (
+        {/* IDLE */}
+        {panelState === 'idle' && (
+          <div className="studio-footer-inner">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>Session name</span>
+              <input
+                className="studio-name-input"
+                value={recName}
+                onChange={e => setRecName(e.target.value)}
+                placeholder="e.g. psalm_23_reading"
+              />
+            </div>
             <button
               className="btn btn-rec"
               onClick={handleStartRecording}
               disabled={saving}
-              style={{ fontSize: 15, padding: '10px 24px' }}
+              style={{ fontSize: 15, padding: '10px 0', width: '100%' }}
             >
               ⏺ Start Recording
             </button>
-          ) : (
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              {recorder.paused ? (
-                <button
-                  className="btn btn-primary"
-                  onClick={recorder.resume}
-                  style={{ fontSize: 15, padding: '10px 24px' }}
-                >
-                  ▶ Resume
-                </button>
-              ) : (
-                <button
-                  className="btn btn-ghost"
-                  onClick={recorder.pause}
-                  style={{ fontSize: 15, padding: '10px 20px' }}
-                >
-                  ⏸ Pause
-                </button>
+            {deck.length === 0 && (
+              <div style={{ marginTop: 6, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
+                No tracks in deck — recording voice only
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* RECORDING */}
+        {panelState === 'recording' && (
+          <div className="studio-footer-inner">
+            {recorder.error && (
+              <div style={{ color: 'var(--danger)', marginBottom: 6, fontSize: 12 }}>⚠ {recorder.error}</div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div className={`rec-dot${recorder.paused ? ' paused' : ''}`} />
+              <div className="rec-timer" style={{ fontSize: 18 }}>{fmt(recorder.seconds)}</div>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1 }}>
+                {recorder.paused ? 'Paused' : 'Recording'}
+              </span>
+              {playingCount > 0 && (
+                <span style={{ fontSize: 11, color: 'var(--cyan)' }}>🎵 {playingCount}</span>
               )}
-              <button
-                className="btn btn-rec recording"
-                onClick={handleStopRecording}
-                style={{ fontSize: 15, padding: '10px 24px' }}
-              >
-                ⏹ Stop
-              </button>
             </div>
-          )}
-        </div>
+            <WaveformBars amplitude={recorder.amplitude} isRec bars={24} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              {recorder.paused ? (
+                <button className="btn btn-primary" onClick={recorder.resume}
+                  style={{ fontSize: 14, padding: '8px 0', flex: 1 }}>▶ Resume</button>
+              ) : (
+                <button className="btn btn-ghost" onClick={recorder.pause}
+                  style={{ fontSize: 14, padding: '8px 0', flex: 1 }}>⏸ Pause</button>
+              )}
+              <button className="btn btn-rec recording" onClick={handleStopRecording}
+                style={{ fontSize: 14, padding: '8px 0', flex: 1 }}>⏹ Stop</button>
+            </div>
+          </div>
+        )}
+
+        {/* REVIEW */}
+        {panelState === 'review' && (
+          <div className="studio-footer-inner">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>💾 Ready to Save</span>
+              {saveMsg && (
+                <span style={{ fontSize: 11, color: saveMsg.startsWith('✓') ? 'var(--success)' : 'var(--danger)' }}>
+                  {saveMsg}
+                </span>
+              )}
+            </div>
+            <audio controls src={lastUrl!} style={{ width: '100%', height: 34, marginBottom: 8 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>Name:</span>
+              <input className="studio-name-input" value={recName}
+                onChange={e => setRecName(e.target.value)} disabled={saving || transcribing} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving || transcribing}
+                style={{ flex: 1, fontSize: 13, padding: '8px 0' }}>
+                {saving ? 'Saving…' : transcribing ? '⏳ Transcribing…' : '💾 Save'}
+              </button>
+              {savedFilename && !saving && !transcribing && (
+                <button className="btn btn-ghost btn-sm" onClick={() => onOpenLyrics(savedFilename)}>🎤</button>
+              )}
+              <button className="btn btn-danger btn-sm" onClick={handleDiscard}
+                disabled={saving || transcribing} style={{ padding: '8px 14px' }}>🗑</button>
+            </div>
+            {autoTranscribe && !savedFilename && !saving && (
+              <div style={{ marginTop: 5, fontSize: 10, color: 'var(--text-muted)' }}>
+                Auto-transcribe on — transcript created after saving
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
-
-      {!selectedTrack && !recorder.recording && !lastUrl && (
-        <div style={{
-          padding: '20px', borderRadius: 'var(--radius)',
-          background: 'rgba(122,162,247,.04)', border: '1px solid var(--border)',
-          color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.7,
-        }}>
-          <strong style={{ color: 'var(--text)' }}>How it works:</strong>
-          <ol style={{ paddingLeft: 18, marginTop: 8 }}>
-            <li>Go to <strong>Music Library</strong> → pick a background track → <strong>Use →</strong></li>
-            <li>Set <strong>Music</strong> and <strong>My Voice</strong> mix levels above</li>
-            <li>Click <strong>Start Recording</strong> — music starts and your mic is captured together</li>
-            <li>The output is a single mixed file: your voice + background music</li>
-            <li>Review the take, then <strong>Save</strong> it to the Recordings tab</li>
-          </ol>
-        </div>
-      )}
     </div>
   )
 }
