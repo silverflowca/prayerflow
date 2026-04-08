@@ -1,4 +1,4 @@
-import { AppSettings, COLOR_SCHEMES, ColorScheme, RecBitrate, RecSampleRate, RecordingQuality, estimateFileSizeMB } from '../hooks/useSettings'
+import { AppSettings, AudioProcessing, COLOR_SCHEMES, ColorScheme, RecBitrate, RecSampleRate, RecordingQuality, estimateFileSizeMB } from '../hooks/useSettings'
 
 interface Props {
   settings: AppSettings
@@ -174,10 +174,14 @@ function qualityLabel(q: RecordingQuality): string {
 }
 
 export function SettingsTab({ settings, onUpdate, username, onLogout }: Props) {
-  const q = settings.recQuality
+  const q  = settings.recQuality
+  const ap = settings.audioProcessing
 
-  const updateQ = (patch: Partial<RecordingQuality>) =>
+  const updateQ  = (patch: Partial<RecordingQuality>) =>
     onUpdate({ recQuality: { ...q, ...patch } })
+
+  const updateAP = (patch: Partial<AudioProcessing>) =>
+    onUpdate({ audioProcessing: { ...ap, ...patch } })
 
   const bitrateIdx    = BITRATE_OPTIONS.indexOf(q.bitrate)    === -1 ? 6 : BITRATE_OPTIONS.indexOf(q.bitrate)
   const samplerateIdx = SAMPLERATE_OPTIONS.indexOf(q.sampleRate) === -1 ? 5 : SAMPLERATE_OPTIONS.indexOf(q.sampleRate)
@@ -339,6 +343,96 @@ export function SettingsTab({ settings, onUpdate, username, onLogout }: Props) {
         </div>
         <SizePill q={q} />
 
+      </GroupCard>
+
+      {/* ── Audio Processing ─────────────────────────── */}
+      <SectionHeader title="Audio Processing (Compressor)" />
+      <GroupCard>
+        <Toggle
+          on={ap.enabled}
+          onChange={v => updateAP({ enabled: v })}
+          label="Compressor"
+          description="Dynamics compressor smooths vocal peaks. Disable for a completely raw signal."
+        />
+        {ap.enabled && (
+          <>
+            <Divider />
+            <SettingRow
+              label={`Threshold — ${ap.threshold} dB`}
+              sub="Signal must exceed this level before compression kicks in. -6 = gentle, -24 = always on."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 28, textAlign: 'right' }}>-60</span>
+                <input type="range" min={-60} max={0} step={1}
+                  value={ap.threshold}
+                  onChange={e => updateAP({ threshold: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 20 }}>0</span>
+              </div>
+            </SettingRow>
+            <Divider />
+            <SettingRow
+              label={`Ratio — ${ap.ratio}:1`}
+              sub="How much to compress. 2:1 = light, 4:1 = vocal, 10:1+ = limiter."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 28, textAlign: 'right' }}>1</span>
+                <input type="range" min={1} max={20} step={0.5}
+                  value={ap.ratio}
+                  onChange={e => updateAP({ ratio: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 20 }}>20</span>
+              </div>
+            </SettingRow>
+            <Divider />
+            <SettingRow
+              label={`Knee — ${ap.knee} dB`}
+              sub="Transition smoothness. 0 = hard knee (abrupt), 40 = soft knee (gradual)."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 28, textAlign: 'right' }}>0</span>
+                <input type="range" min={0} max={40} step={1}
+                  value={ap.knee}
+                  onChange={e => updateAP({ knee: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 20 }}>40</span>
+              </div>
+            </SettingRow>
+            <Divider />
+            <SettingRow
+              label={`Attack — ${ap.attack} ms`}
+              sub="How fast compression engages. 1 ms = catches all peaks, 30 ms = more natural."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 28, textAlign: 'right' }}>1</span>
+                <input type="range" min={1} max={200} step={1}
+                  value={ap.attack}
+                  onChange={e => updateAP({ attack: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 30 }}>200ms</span>
+              </div>
+            </SettingRow>
+            <Divider />
+            <SettingRow
+              label={`Release — ${ap.release} ms`}
+              sub="How fast compression lets go. 100 ms = snappy, 600+ ms = smooth/pumping-free."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 28, textAlign: 'right' }}>10</span>
+                <input type="range" min={10} max={2000} step={10}
+                  value={ap.release}
+                  onChange={e => updateAP({ release: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 34 }}>2000</span>
+              </div>
+            </SettingRow>
+          </>
+        )}
       </GroupCard>
 
       {/* ── Storage info ─────────────────────────────── */}

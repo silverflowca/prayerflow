@@ -12,10 +12,29 @@ export interface RecordingQuality {
   sampleRate: RecSampleRate
 }
 
+export interface AudioProcessing {
+  enabled:   boolean   // false = bypass compressor entirely (wire mic straight to dest)
+  threshold: number    // dB  — default -6  (range: -60..0)
+  knee:      number    // dB  — default 6   (range: 0..40)
+  ratio:     number    // x:1 — default 2   (range: 1..20)
+  attack:    number    // ms  — default 10  (range: 1..200)
+  release:   number    // ms  — default 400 (range: 10..2000)
+}
+
 export interface AppSettings {
-  autoTranscribe: boolean
-  colorScheme:    ColorScheme
-  recQuality:     RecordingQuality
+  autoTranscribe:   boolean
+  colorScheme:      ColorScheme
+  recQuality:       RecordingQuality
+  audioProcessing:  AudioProcessing
+}
+
+export const AUDIO_PROCESSING_DEFAULTS: AudioProcessing = {
+  enabled:   true,
+  threshold: -6,
+  knee:      6,
+  ratio:     2,
+  attack:    10,
+  release:   400,
 }
 
 const DEFAULTS: AppSettings = {
@@ -26,6 +45,7 @@ const DEFAULTS: AppSettings = {
     channels:   1,
     sampleRate: 48000,
   },
+  audioProcessing: AUDIO_PROCESSING_DEFAULTS,
 }
 
 // Color scheme definitions
@@ -189,11 +209,12 @@ function load(): AppSettings {
     const raw = localStorage.getItem('prayerflow_settings')
     if (raw) {
       const parsed = JSON.parse(raw)
-      // Deep-merge recQuality so new keys get defaults
+      // Deep-merge nested objects so new keys get defaults
       return {
         ...DEFAULTS,
         ...parsed,
-        recQuality: { ...DEFAULTS.recQuality, ...(parsed.recQuality ?? {}) },
+        recQuality:      { ...DEFAULTS.recQuality,      ...(parsed.recQuality      ?? {}) },
+        audioProcessing: { ...DEFAULTS.audioProcessing, ...(parsed.audioProcessing ?? {}) },
       }
     }
   } catch {}

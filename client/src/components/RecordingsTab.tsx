@@ -38,6 +38,10 @@ export function RecordingsTab({ onOpenLyrics, apiFetch }: Props) {
   const [loadingAudio, setLoadingAudio] = useState<Record<string, boolean>>({})
   const blobUrlsRef = useRef<Record<string, string>>({})
 
+  // Add to library
+  const [addingToLib, setAddingToLib] = useState<string | null>(null)
+  const [addedToLib, setAddedToLib] = useState<string | null>(null)
+
   const load = () => {
     setLoading(true)
     apiFetch('/api/recordings')
@@ -160,6 +164,23 @@ export function RecordingsTab({ onOpenLyrics, apiFetch }: Props) {
     a.download = name
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleAddToLibrary = async (name: string) => {
+    setAddingToLib(name)
+    try {
+      const res = await apiFetch(`/api/recordings/${encodeURIComponent(name)}/add-to-library`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: 'My Recordings' }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setAddedToLib(name)
+        setTimeout(() => setAddedToLib(null), 2500)
+      }
+    } catch {}
+    setAddingToLib(null)
   }
 
   const handleTranscribe = async (name: string) => {
@@ -316,6 +337,16 @@ export function RecordingsTab({ onOpenLyrics, apiFetch }: Props) {
               onClick={() => handleDownload(rec.name)}
             >
               ⬇
+            </button>
+            {/* Add to Library */}
+            <button
+              className="btn btn-ghost btn-sm"
+              title="Add to Music Library"
+              disabled={addingToLib === rec.name}
+              onClick={() => handleAddToLibrary(rec.name)}
+              style={addedToLib === rec.name ? { color: 'var(--success)' } : undefined}
+            >
+              {addingToLib === rec.name ? '⏳' : addedToLib === rec.name ? '✓' : '🎵+'}
             </button>
             {/* Delete */}
             <button

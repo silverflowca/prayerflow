@@ -234,6 +234,8 @@ export default function App() {
                   onChangeTrack={() => setTab('library')}
                   autoTranscribe={settings.autoTranscribe}
                   recQuality={settings.recQuality}
+                  audioProcessing={settings.audioProcessing}
+                  onUpdateAudioProcessing={patch => update({ audioProcessing: { ...settings.audioProcessing, ...patch } })}
                   onOpenLyrics={setLyricsFilename}
                   apiFetch={apiFetch}
                 />

@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRecorder, fmt, fmtBytes } from '../hooks/useAudio'
-import type { RecordingQuality } from '../hooks/useSettings'
+import type { RecordingQuality, AudioProcessing } from '../hooks/useSettings'
 
 interface Props {
   selectedTrack: string | null
   onChangeTrack: () => void
   autoTranscribe: boolean
   recQuality: RecordingQuality
+  audioProcessing: AudioProcessing
+  onUpdateAudioProcessing: (patch: Partial<AudioProcessing>) => void
   onOpenLyrics: (filename: string) => void
   apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>
 }
@@ -120,39 +122,69 @@ function DeckRow({
   track,
   exclusive,
   isRecording,
+  currentTime,
+  duration,
   onPlay,
   onPause,
   onStop,
   onVol,
+  onSeek,
   onRemove,
 }: {
   track: DeckTrack
   exclusive: boolean
   isRecording: boolean
+  currentTime: number
+  duration: number
   onPlay: (id: string) => void
   onPause: (id: string) => void
   onStop: (id: string) => void
   onVol: (id: string, v: number) => void
+  onSeek: (id: string, t: number) => void
   onRemove: (id: string) => void
 }) {
+  const pct = duration > 0 ? currentTime / duration : 0
+
   return (
     <div className={`deck-row${track.playing ? ' deck-row-active' : ''}`}>
       <span style={{ fontSize: 15, flexShrink: 0 }}>{track.playing ? '🔊' : '🎵'}</span>
+
       <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Track name */}
         <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {cleanName(track.name)}
         </div>
-        <input
-          type="range" min={0} max={1} step={0.02}
-          value={track.vol}
-          onChange={e => onVol(track.id, parseFloat(e.target.value))}
-          style={{ width: '100%', height: 3, accentColor: 'var(--accent)', marginTop: 4 }}
-        />
+
+        {/* Seek bar — doubles as playback position indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+          <input
+            type="range" min={0} max={duration || 1} step={0.1}
+            value={currentTime}
+            onChange={e => onSeek(track.id, parseFloat(e.target.value))}
+            style={{ flex: 1, height: 3, accentColor: track.playing ? 'var(--danger)' : 'var(--accent)' }}
+          />
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0, width: 68, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+            {fmt(currentTime)}{duration > 0 ? ` / ${fmt(duration)}` : ''}
+          </span>
+        </div>
+
+        {/* Volume slider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>Vol</span>
+          <input
+            type="range" min={0} max={1} step={0.02}
+            value={track.vol}
+            onChange={e => onVol(track.id, parseFloat(e.target.value))}
+            style={{ flex: 1, height: 3, accentColor: 'var(--accent)' }}
+          />
+          <span style={{ fontSize: 10, color: 'var(--text-muted)', width: 28, textAlign: 'right', flexShrink: 0 }}>
+            {Math.round(track.vol * 100)}%
+          </span>
+        </div>
       </div>
-      <span style={{ fontSize: 10, color: 'var(--text-muted)', width: 26, textAlign: 'right', flexShrink: 0 }}>
-        {Math.round(track.vol * 100)}%
-      </span>
-      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+
+      {/* Transport buttons */}
+      <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignSelf: 'center' }}>
         {track.playing ? (
           <button className="btn btn-ghost btn-sm" style={{ padding: '3px 8px' }} onClick={() => onPause(track.id)}>⏸</button>
         ) : (
@@ -167,8 +199,163 @@ function DeckRow({
   )
 }
 
+// ── Audio Processing collapsible drawer ────────────────────
+function AudioProcessingDrawer({
+  proc,
+  onChange,
+}: {
+  proc: AudioProcessing
+  onChange: (patch: Partial<AudioProcessing>) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      {/* Pull-down handle */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+          background: 'none', border: 'none', cursor: 'pointer',
+          padding: '4px 0', color: 'var(--text-muted)', fontSize: 12,
+        }}
+      >
+        <span style={{ flex: 1, textAlign: 'left', fontWeight: 500 }}>
+          🎛 Audio Processing
+          {proc.enabled
+            ? <span style={{ marginLeft: 6, color: 'var(--accent)', fontWeight: 400 }}>
+                threshold {proc.threshold}dB · {proc.ratio}:1
+              </span>
+            : <span style={{ marginLeft: 6, color: 'var(--text-muted)', fontWeight: 400 }}>bypassed</span>
+          }
+        </span>
+        <span style={{
+          fontSize: 10, transition: 'transform .15s',
+          display: 'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+        }}>▾</span>
+      </button>
+
+      {/* Drawer body */}
+      {open && (
+        <div style={{
+          marginTop: 6, padding: '10px 12px',
+          background: 'var(--bg)', borderRadius: 'var(--radius)',
+          border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10,
+        }}>
+          {/* Enable toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 12, color: 'var(--text)' }}>Compressor</span>
+            <button
+              onClick={() => onChange({ enabled: !proc.enabled })}
+              style={{
+                width: 38, height: 22, borderRadius: 11,
+                background: proc.enabled ? 'var(--accent)' : 'var(--surface2)',
+                border: 'none', cursor: 'pointer', position: 'relative',
+                transition: 'background .15s', padding: 0, flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 2, left: proc.enabled ? 18 : 2,
+                width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                transition: 'left .15s cubic-bezier(.4,0,.2,1)',
+                boxShadow: '0 1px 4px rgba(0,0,0,.25)',
+              }} />
+            </button>
+          </div>
+
+          {proc.enabled && (
+            <>
+              {/* Threshold */}
+              <ProcRow
+                label="Threshold"
+                value={`${proc.threshold} dB`}
+                hint="-6 = gentle · -24 = always on"
+              >
+                <input type="range" min={-60} max={0} step={1}
+                  value={proc.threshold}
+                  onChange={e => onChange({ threshold: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+
+              {/* Ratio */}
+              <ProcRow
+                label="Ratio"
+                value={`${proc.ratio}:1`}
+                hint="2 = light · 4 = vocal · 10 = limiter"
+              >
+                <input type="range" min={1} max={20} step={0.5}
+                  value={proc.ratio}
+                  onChange={e => onChange({ ratio: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+
+              {/* Knee */}
+              <ProcRow
+                label="Knee"
+                value={`${proc.knee} dB`}
+                hint="0 = hard · 12 = soft"
+              >
+                <input type="range" min={0} max={40} step={1}
+                  value={proc.knee}
+                  onChange={e => onChange({ knee: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+
+              {/* Attack */}
+              <ProcRow
+                label="Attack"
+                value={`${proc.attack} ms`}
+                hint="1 ms = catch peaks · 30 ms = natural"
+              >
+                <input type="range" min={1} max={200} step={1}
+                  value={proc.attack}
+                  onChange={e => onChange({ attack: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+
+              {/* Release */}
+              <ProcRow
+                label="Release"
+                value={`${proc.release} ms`}
+                hint="100 ms = snappy · 600 ms = smooth"
+              >
+                <input type="range" min={10} max={2000} step={10}
+                  value={proc.release}
+                  onChange={e => onChange({ release: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ProcRow({ label, value, hint, children }: {
+  label: string; value: string; hint: string; children: React.ReactNode
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{label}</span>
+        <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>{value}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {children}
+      </div>
+      <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{hint}</span>
+    </div>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────
-export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQuality, onOpenLyrics, apiFetch }: Props) {
+export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQuality, audioProcessing, onUpdateAudioProcessing, onOpenLyrics, apiFetch }: Props) {
   const recorder = useRecorder()
 
   // Deck: list of tracks + their audio elements
@@ -192,6 +379,28 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
   const [lastUrl,  setLastUrl]  = useState<string | null>(null)
   const [transcribing, setTranscribing] = useState(false)
   const [savedFilename, setSavedFilename] = useState<string | null>(null)
+  const [addingToLib, setAddingToLib] = useState(false)
+  const [addedToLib, setAddedToLib]   = useState(false)
+
+  // Per-track playback position: deckId → { currentTime, duration }
+  const [trackTimes, setTrackTimes] = useState<Record<string, { currentTime: number; duration: number }>>({})
+  const rafRef = useRef<number>(0)
+
+  // Poll audio element positions at ~15fps — lightweight, no per-element listeners needed
+  useEffect(() => {
+    const poll = () => {
+      setTrackTimes(() => {
+        const next: Record<string, { currentTime: number; duration: number }> = {}
+        audioElsRef.current.forEach((el, id) => {
+          next[id] = { currentTime: el.currentTime, duration: isFinite(el.duration) ? el.duration : 0 }
+        })
+        return next
+      })
+      rafRef.current = requestAnimationFrame(poll)
+    }
+    rafRef.current = requestAnimationFrame(poll)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [])
 
   // Re-render waveform
   const [, setTick] = useState(0)
@@ -242,9 +451,10 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
         const el = getOrCreateAudioEl(t.trackId, t.id)
         el.volume = t.vol
         el.play().catch(() => {})
-        // If recording and track isn't yet wired into context, connect it now
+        // If recording and track isn't yet wired into context, connect it now.
+        // bgVolume=1.0 because element.volume already carries the user's level.
         if (recorder.recording) {
-          recorder.connectTrack(el, t.vol)
+          recorder.connectTrack(el, 1.0)
         }
         return { ...t, playing: true, audioEl: el }
       }
@@ -284,6 +494,11 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
     }))
   }
 
+  const seekTrack = (deckId: string, t: number) => {
+    const el = audioElsRef.current.get(deckId)
+    if (el) el.currentTime = t
+  }
+
   const removeTrack = (deckId: string) => {
     const el = audioElsRef.current.get(deckId)
     if (el) { el.pause(); el.src = '' }
@@ -300,22 +515,36 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
   const handleStartRecording = async () => {
     setSaveMsg(null); setLastBlob(null); setLastUrl(null)
 
-    // Play all deck tracks that are queued (already playing)
-    // Build list of active audio elements
+    // createMediaElementSource() permanently binds an <audio> element to an AudioContext.
+    // After stop() closes the context, we must recreate elements fresh so the new context
+    // can claim them — otherwise the try/catch in useAudio silently skips them (mic-only recording).
     const activeEls: HTMLAudioElement[] = []
-    const playingDeck: string[] = []
 
-    deck.forEach(t => {
+    setDeck(prev => prev.map(t => {
+      // Destroy old element (unbind from dead context)
+      const old = audioElsRef.current.get(t.id)
+      if (old) { old.pause(); old.src = '' }
+
+      // Create fresh element with same settings
+      const el = new Audio()
+      el.src = `/api/tracks/${t.trackId.split('/').map(encodeURIComponent).join('/')}`
+      el.loop = true
+      el.volume = t.vol
+      audioElsRef.current.set(t.id, el)
+
       if (t.playing) {
-        const el = audioElsRef.current.get(t.id)
-        if (el) { activeEls.push(el); playingDeck.push(t.id) }
+        el.play().catch(() => {})
+        activeEls.push(el)
       }
-    })
 
+      return { ...t, audioEl: el }
+    }))
+
+    // Small delay so elements can begin buffering
     await new Promise(r => setTimeout(r, 80))
 
-    // Use global vol 0.5 as default bg; individual vols are set on the elements already
-    await recorder.start(activeEls, 0.5, micVol, recQuality)
+    // Use individual element volumes; bgVolume=1.0 so gain node is transparent
+    await recorder.start(activeEls, 1.0, micVol, recQuality, audioProcessing)
   }
 
   const handleStopRecording = async () => {
@@ -357,9 +586,25 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
     setSaving(false)
   }
 
+  const handleAddToLibrary = async () => {
+    if (!savedFilename) return
+    setAddingToLib(true)
+    try {
+      const res = await apiFetch(`/api/recordings/${encodeURIComponent(savedFilename)}/add-to-library`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: 'My Recordings' }),
+      })
+      const data = await res.json()
+      if (data.ok) { setAddedToLib(true) }
+    } catch {}
+    setAddingToLib(false)
+  }
+
   const handleDiscard = () => {
     if (lastUrl) URL.revokeObjectURL(lastUrl)
     setLastBlob(null); setLastUrl(null); setSaveMsg(null); setSavedFilename(null)
+    setAddedToLib(false)
   }
 
   const panelState: 'idle' | 'recording' | 'review' =
@@ -434,10 +679,13 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
                 track={t}
                 exclusive={exclusive}
                 isRecording={recorder.recording}
+                currentTime={trackTimes[t.id]?.currentTime ?? 0}
+                duration={trackTimes[t.id]?.duration ?? 0}
                 onPlay={playTrack}
                 onPause={pauseTrack}
                 onStop={stopTrack}
                 onVol={setVol}
+                onSeek={seekTrack}
                 onRemove={removeTrack}
               />
             ))}
@@ -451,7 +699,7 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
           )}
         </div>
 
-        {/* ── MIC VOLUME ── */}
+        {/* ── MIC VOLUME + AUDIO PROCESSING ── */}
         <div className="card" style={{ marginBottom: 0, padding: '10px 14px' }}>
           <div className="vol-row" style={{ marginBottom: 0 }}>
             <span className="vol-label" style={{ fontSize: 11 }}>🎙 My voice</span>
@@ -459,6 +707,10 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
               value={micVol} onChange={e => setMicVol(parseFloat(e.target.value))} />
             <span className="vol-value">{Math.round(micVol * 100)}%</span>
           </div>
+          <AudioProcessingDrawer
+            proc={audioProcessing}
+            onChange={onUpdateAudioProcessing}
+          />
         </div>
       </div>
 
@@ -548,6 +800,17 @@ export function StudioTab({ selectedTrack, onChangeTrack, autoTranscribe, recQua
               </button>
               {savedFilename && !saving && !transcribing && (
                 <button className="btn btn-ghost btn-sm" onClick={() => onOpenLyrics(savedFilename)}>🎤</button>
+              )}
+              {savedFilename && !saving && !transcribing && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  title="Add to Music Library"
+                  onClick={handleAddToLibrary}
+                  disabled={addingToLib || addedToLib}
+                  style={addedToLib ? { color: 'var(--success)' } : undefined}
+                >
+                  {addingToLib ? '⏳' : addedToLib ? '✓ In Library' : '🎵+ Library'}
+                </button>
               )}
               <button className="btn btn-danger btn-sm" onClick={handleDiscard}
                 disabled={saving || transcribing} style={{ padding: '8px 14px' }}>🗑</button>

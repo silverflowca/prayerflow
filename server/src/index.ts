@@ -112,6 +112,9 @@ app.get('/api/auth/me', (c) => {
   return c.json({ ok: true, username: result.username })
 })
 
+const AUDIO_EXTS = ['.mp3', '.webm', '.mp4', '.wav', '.ogg', '.m4a']
+const isAudio = (name: string) => AUDIO_EXTS.some(ext => name.toLowerCase().endsWith(ext))
+
 // ── List tracks (grouped by folder) — public ──────────────
 app.get('/api/tracks', (c) => {
   try {
@@ -119,7 +122,7 @@ app.get('/api/tracks', (c) => {
     const entries = fs.readdirSync(MUSIC_DIR, { withFileTypes: true })
 
     for (const e of entries) {
-      if (e.isFile() && e.name.toLowerCase().endsWith('.mp3')) {
+      if (e.isFile() && isAudio(e.name)) {
         result.push({ id: e.name, folder: '', name: e.name })
       }
     }
@@ -127,7 +130,7 @@ app.get('/api/tracks', (c) => {
       if (e.isDirectory()) {
         try {
           const sub = fs.readdirSync(path.join(MUSIC_DIR, e.name))
-            .filter(f => f.toLowerCase().endsWith('.mp3'))
+            .filter(isAudio)
             .sort()
           for (const f of sub) {
             result.push({ id: `${e.name}/${f}`, folder: e.name, name: f })
@@ -310,6 +313,39 @@ app.patch('/api/recordings/:filename', async (c) => {
   }
 
   return c.json({ ok: true, filename: newFilename })
+})
+
+// ── Copy recording into Music Library — auth required ─────
+app.post('/api/recordings/:filename/add-to-library', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+
+  const filename = decodeURIComponent(c.req.param('filename'))
+  if (filename.includes('..') || filename.includes('/')) return c.json({ error: 'Invalid' }, 400)
+
+  const body = await c.req.json().catch(() => ({}))
+  // Optional target folder name inside MUSIC_DIR (defaults to 'My Recordings')
+  const folder: string = ((body.folder ?? 'My Recordings') as string).replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'My Recordings'
+
+  const userDir = path.join(RECORDINGS_DIR, auth.username)
+  const srcPath = path.join(userDir, filename)
+  if (!fs.existsSync(srcPath)) return c.json({ error: 'Recording not found' }, 404)
+
+  const destDir = path.join(MUSIC_DIR, folder)
+  if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true })
+
+  // Use original filename but avoid collisions
+  let destName = filename
+  let destPath = path.join(destDir, destName)
+  if (fs.existsSync(destPath)) {
+    const base = path.basename(filename, path.extname(filename))
+    const ext  = path.extname(filename)
+    destName = `${base}_${Date.now()}${ext}`
+    destPath = path.join(destDir, destName)
+  }
+
+  fs.copyFileSync(srcPath, destPath)
+  return c.json({ ok: true, trackId: `${folder}/${destName}`, folder, name: destName })
 })
 
 // ── Public share: audio stream (no auth) ──────────────────

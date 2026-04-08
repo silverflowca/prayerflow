@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
-import type { RecordingQuality } from './useSettings'
+import type { RecordingQuality, AudioProcessing } from './useSettings'
+import { AUDIO_PROCESSING_DEFAULTS } from './useSettings'
 
 export function useAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -78,6 +79,7 @@ export function useRecorder() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const destRef = useRef<MediaStreamAudioDestinationNode | null>(null)
   // Store all connected audio elements so pause/resume can control them
   const bgAudioEls = useRef<HTMLAudioElement[]>([])
   const [recording, setRecording] = useState(false)
@@ -101,6 +103,7 @@ export function useRecorder() {
     bgVolume = 0.7,
     micVolume = 1.0,
     quality?: RecordingQuality,
+    audioProc: AudioProcessing = AUDIO_PROCESSING_DEFAULTS,
   ) => {
     const sampleRate  = quality?.sampleRate  ?? 48000
     const channels    = quality?.channels    ?? 1
@@ -128,22 +131,27 @@ export function useRecorder() {
 
       // 3. Recording destination
       const dest = ctx.createMediaStreamDestination()
+      destRef.current = dest
 
       // 4. Mic → gain → compressor → dest
       const micSource = ctx.createMediaStreamSource(micStream)
       const micGain = ctx.createGain()
-      micGain.gain.value = micVolume * 1.5
+      micGain.gain.value = micVolume
 
-      const compressor = ctx.createDynamicsCompressor()
-      compressor.threshold.value = -24
-      compressor.knee.value = 10
-      compressor.ratio.value = 4
-      compressor.attack.value = 0.003
-      compressor.release.value = 0.25
-
-      micSource.connect(micGain)
-      micGain.connect(compressor)
-      compressor.connect(dest)
+      if (audioProc.enabled) {
+        const compressor = ctx.createDynamicsCompressor()
+        compressor.threshold.value = audioProc.threshold
+        compressor.knee.value      = audioProc.knee
+        compressor.ratio.value     = audioProc.ratio
+        compressor.attack.value    = audioProc.attack  / 1000  // ms → s
+        compressor.release.value   = audioProc.release / 1000  // ms → s
+        micSource.connect(micGain)
+        micGain.connect(compressor)
+        compressor.connect(dest)
+      } else {
+        micSource.connect(micGain)
+        micGain.connect(dest)
+      }
 
       // 5. Each bg audio element → gain → dest + speakers
       for (const el of bgElements) {
@@ -205,24 +213,18 @@ export function useRecorder() {
   // Connect a new audio element into the active AudioContext mid-recording
   const connectTrack = useCallback((el: HTMLAudioElement, bgVolume: number) => {
     const ctx = audioCtxRef.current
-    if (!ctx) return
+    const dest = destRef.current
+    if (!ctx || !dest) return
     try {
       const bgSource = ctx.createMediaElementSource(el)
       const bgGain = ctx.createGain()
       bgGain.gain.value = bgVolume
       bgSource.connect(bgGain)
-      // We need the destination — re-create from the existing stream
-      // The recorder stream destination is already running; route to ctx.destination for speakers
-      bgGain.connect(ctx.destination)
-      // Also route to the recorder destination via a fresh MediaStreamDestination isn't possible
-      // mid-stream, but since all audio goes through ctx it's already captured by MediaRecorder
-      // because MediaRecorder tracks the stream that was set up — new elements route to speakers
-      // and are picked up by the mix via ctx.destination → analyser path.
-      // For full mix capture of dynamically added tracks, we use a workaround:
-      // connect to the analyserSource's upstream by routing through ctx.destination.
+      bgGain.connect(dest)           // → recorder stream (captured in recording)
+      bgGain.connect(ctx.destination) // → speakers
       bgAudioEls.current.push(el)
     } catch {
-      // Already connected
+      // Already connected to this context — skip
     }
   }, [])
 
@@ -265,6 +267,7 @@ export function useRecorder() {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
         audioCtxRef.current?.close()
         audioCtxRef.current = null
+        destRef.current = null
         resolve(blob)
       }
       mr.stop()
@@ -278,7 +281,7 @@ export function useRecorder() {
     })
   }, [])
 
-  return { recording, paused, seconds, amplitude, error, start, pause, resume, stop, connectTrack }
+  return { recording, paused, seconds, amplitude, error, start, pause, resume, stop, connectTrack } as const
 }
 
 export function fmt(s: number): string {
