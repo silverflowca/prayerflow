@@ -435,6 +435,51 @@ export function SettingsTab({ settings, onUpdate, username, onLogout }: Props) {
         )}
       </GroupCard>
 
+      {/* ── Hiss Filter ──────────────────────────────── */}
+      <SectionHeader title="Hiss Filter (High-Shelf Cut)" />
+      <GroupCard>
+        <Toggle
+          on={ap.hissFilter}
+          onChange={v => updateAP({ hissFilter: v })}
+          label="Remove Mic Hiss"
+          description="Cuts high frequencies above the shelf point. Reduces hiss and room noise from the microphone."
+        />
+        {ap.hissFilter && (
+          <>
+            <Divider />
+            <SettingRow
+              label={`Shelf Frequency — ${ap.hissFreq.toLocaleString()} Hz`}
+              sub="Cut starts here. 6 kHz = strong cut, 8 kHz = balanced, 12 kHz = subtle air loss only."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 36, textAlign: 'right' }}>2k</span>
+                <input type="range" min={2000} max={16000} step={500}
+                  value={ap.hissFreq}
+                  onChange={e => updateAP({ hissFreq: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 36 }}>16k</span>
+              </div>
+            </SettingRow>
+            <Divider />
+            <SettingRow
+              label={`Cut Depth — ${ap.hissGain} dB`}
+              sub="How much to reduce. -12 dB = light, -18 dB = balanced, -30 dB = heavy cut."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 36, textAlign: 'right' }}>-40</span>
+                <input type="range" min={-40} max={0} step={1}
+                  value={ap.hissGain}
+                  onChange={e => updateAP({ hissGain: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 36 }}>0</span>
+              </div>
+            </SettingRow>
+          </>
+        )}
+      </GroupCard>
+
       {/* ── Storage info ─────────────────────────────── */}
       <SectionHeader title="Storage" />
       <GroupCard>

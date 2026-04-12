@@ -13,12 +13,15 @@ export interface RecordingQuality {
 }
 
 export interface AudioProcessing {
-  enabled:   boolean   // false = bypass compressor entirely (wire mic straight to dest)
-  threshold: number    // dB  — default -6  (range: -60..0)
-  knee:      number    // dB  — default 6   (range: 0..40)
-  ratio:     number    // x:1 — default 2   (range: 1..20)
-  attack:    number    // ms  — default 10  (range: 1..200)
-  release:   number    // ms  — default 400 (range: 10..2000)
+  enabled:        boolean   // false = bypass compressor entirely (wire mic straight to dest)
+  threshold:      number    // dB  — default -6  (range: -60..0)
+  knee:           number    // dB  — default 6   (range: 0..40)
+  ratio:          number    // x:1 — default 2   (range: 1..20)
+  attack:         number    // ms  — default 10  (range: 1..200)
+  release:        number    // ms  — default 400 (range: 10..2000)
+  hissFilter:     boolean   // high-shelf cut to remove mic hiss — default true
+  hissFreq:       number    // Hz  — shelf starts here — default 8000
+  hissGain:       number    // dB  — negative = cut  — default -18
 }
 
 export interface AppSettings {
@@ -29,12 +32,15 @@ export interface AppSettings {
 }
 
 export const AUDIO_PROCESSING_DEFAULTS: AudioProcessing = {
-  enabled:   true,
-  threshold: -6,
-  knee:      6,
-  ratio:     2,
-  attack:    10,
-  release:   400,
+  enabled:    true,
+  threshold:  -6,
+  knee:       6,
+  ratio:      2,
+  attack:     10,
+  release:    400,
+  hissFilter: true,
+  hissFreq:   8000,
+  hissGain:   -18,
 }
 
 const DEFAULTS: AppSettings = {

@@ -222,12 +222,10 @@ function AudioProcessingDrawer({
       >
         <span style={{ flex: 1, textAlign: 'left', fontWeight: 500 }}>
           🎛 Audio Processing
-          {proc.enabled
-            ? <span style={{ marginLeft: 6, color: 'var(--accent)', fontWeight: 400 }}>
-                threshold {proc.threshold}dB · {proc.ratio}:1
-              </span>
-            : <span style={{ marginLeft: 6, color: 'var(--text-muted)', fontWeight: 400 }}>bypassed</span>
-          }
+          <span style={{ marginLeft: 6, color: 'var(--text-muted)', fontWeight: 400, fontSize: 11 }}>
+            {proc.hissFilter ? `hiss ${(proc.hissFreq/1000).toFixed(1)}k` : 'no hiss filter'}
+            {proc.enabled ? ` · comp ${proc.threshold}dB` : ' · no comp'}
+          </span>
         </span>
         <span style={{
           fontSize: 10, transition: 'transform .15s',
@@ -242,6 +240,55 @@ function AudioProcessingDrawer({
           background: 'var(--bg)', borderRadius: 'var(--radius)',
           border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 10,
         }}>
+          {/* Hiss filter toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <span style={{ fontSize: 12, color: 'var(--text)', fontWeight: 500 }}>Hiss Filter</span>
+              {proc.hissFilter && (
+                <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                  {(proc.hissFreq / 1000).toFixed(1)}kHz · {proc.hissGain}dB
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => onChange({ hissFilter: !proc.hissFilter })}
+              style={{
+                width: 38, height: 22, borderRadius: 11,
+                background: proc.hissFilter ? 'var(--accent)' : 'var(--surface2)',
+                border: 'none', cursor: 'pointer', position: 'relative',
+                transition: 'background .15s', padding: 0, flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 2, left: proc.hissFilter ? 18 : 2,
+                width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                transition: 'left .15s cubic-bezier(.4,0,.2,1)',
+                boxShadow: '0 1px 4px rgba(0,0,0,.25)',
+              }} />
+            </button>
+          </div>
+
+          {proc.hissFilter && (
+            <>
+              <ProcRow label="Shelf Freq" value={`${(proc.hissFreq / 1000).toFixed(1)} kHz`} hint="6k = strong · 8k = balanced · 12k = subtle">
+                <input type="range" min={2000} max={16000} step={500}
+                  value={proc.hissFreq}
+                  onChange={e => onChange({ hissFreq: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+              <ProcRow label="Cut Depth" value={`${proc.hissGain} dB`} hint="-12 = light · -18 = balanced · -30 = heavy">
+                <input type="range" min={-40} max={0} step={1}
+                  value={proc.hissGain}
+                  onChange={e => onChange({ hissGain: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+            </>
+          )}
+
+          <div style={{ height: 1, background: 'var(--border)' }} />
+
           {/* Enable toggle */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, color: 'var(--text)' }}>Compressor</span>

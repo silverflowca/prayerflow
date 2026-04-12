@@ -138,6 +138,15 @@ export function useRecorder() {
       const micGain = ctx.createGain()
       micGain.gain.value = micVolume
 
+      // Optional high-shelf cut to remove mic hiss
+      const hissFilter = ctx.createBiquadFilter()
+      hissFilter.type = 'highshelf'
+      hissFilter.frequency.value = audioProc.hissFreq ?? 8000
+      hissFilter.gain.value      = audioProc.hissFilter ? (audioProc.hissGain ?? -18) : 0
+
+      micSource.connect(micGain)
+      micGain.connect(hissFilter)
+
       if (audioProc.enabled) {
         const compressor = ctx.createDynamicsCompressor()
         compressor.threshold.value = audioProc.threshold
@@ -145,12 +154,10 @@ export function useRecorder() {
         compressor.ratio.value     = audioProc.ratio
         compressor.attack.value    = audioProc.attack  / 1000  // ms → s
         compressor.release.value   = audioProc.release / 1000  // ms → s
-        micSource.connect(micGain)
-        micGain.connect(compressor)
+        hissFilter.connect(compressor)
         compressor.connect(dest)
       } else {
-        micSource.connect(micGain)
-        micGain.connect(dest)
+        hissFilter.connect(dest)
       }
 
       // 5. Each bg audio element → gain → dest + speakers
