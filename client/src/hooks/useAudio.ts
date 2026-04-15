@@ -147,6 +147,47 @@ export function useRecorder() {
       micSource.connect(micGain)
       micGain.connect(hissFilter)
 
+      // Noise gate: ScriptProcessor monitors RMS, controls a GainNode after hissFilter
+      const gateGain = ctx.createGain()
+      gateGain.gain.value = 1
+      if (audioProc.gateEnabled) {
+        const bufSize = 2048
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        const gateProc = ctx.createScriptProcessor(bufSize, 1, 1)
+        const gateThresh = audioProc.gateThreshold ?? 0.015
+        const gateAttackCoef  = Math.exp(-1 / (ctx.sampleRate * ((audioProc.gateAttack  ?? 10)  / 1000)))
+        const gateReleaseCoef = Math.exp(-1 / (ctx.sampleRate * ((audioProc.gateRelease ?? 200) / 1000)))
+        let gateEnv = 0
+        let gateOpen = false
+        gateProc.onaudioprocess = (e) => {
+          const input = e.inputBuffer.getChannelData(0)
+          // RMS of this buffer
+          let sum = 0
+          for (let i = 0; i < input.length; i++) sum += input[i] * input[i]
+          const rms = Math.sqrt(sum / input.length)
+          // Smooth envelope
+          if (rms > gateEnv) {
+            gateEnv = gateEnv * gateAttackCoef + rms * (1 - gateAttackCoef)
+          } else {
+            gateEnv = gateEnv * gateReleaseCoef + rms * (1 - gateReleaseCoef)
+          }
+          const open = gateEnv > gateThresh
+          if (open !== gateOpen) {
+            gateOpen = open
+            gateGain.gain.setTargetAtTime(open ? 1 : 0, ctx.currentTime, 0.01)
+          }
+          // pass through (gate works via gateGain, not by zeroing output here)
+          const output = e.outputBuffer.getChannelData(0)
+          output.set(input)
+        }
+        // wire: hissFilter → gateProc (level detector) + gateGain (volume control)
+        hissFilter.connect(gateProc)
+        gateProc.connect(ctx.destination) // ScriptProcessor needs a destination to run
+        hissFilter.connect(gateGain)
+      } else {
+        hissFilter.connect(gateGain)
+      }
+
       if (audioProc.enabled) {
         const compressor = ctx.createDynamicsCompressor()
         compressor.threshold.value = audioProc.threshold
@@ -154,10 +195,10 @@ export function useRecorder() {
         compressor.ratio.value     = audioProc.ratio
         compressor.attack.value    = audioProc.attack  / 1000  // ms → s
         compressor.release.value   = audioProc.release / 1000  // ms → s
-        hissFilter.connect(compressor)
+        gateGain.connect(compressor)
         compressor.connect(dest)
       } else {
-        hissFilter.connect(dest)
+        gateGain.connect(dest)
       }
 
       // 5. Each bg audio element → gain → dest + speakers
@@ -271,7 +312,8 @@ export function useRecorder() {
       const mr = mediaRecorderRef.current
       if (!mr) { resolve(new Blob()); return }
       mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        const blobType = mr.mimeType || 'audio/webm'
+        const blob = new Blob(chunksRef.current, { type: blobType })
         audioCtxRef.current?.close()
         audioCtxRef.current = null
         destRef.current = null

@@ -61,7 +61,7 @@ const app = new Hono()
 
 app.use('*', cors({
   origin: '*',
-  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Range', 'Authorization'],
   exposeHeaders: ['Content-Range', 'Accept-Ranges', 'Content-Length'],
 }))
@@ -475,6 +475,78 @@ app.get('/api/share/:username/:filename', (c) => {
   return new Response(buf, {
     headers: { 'Content-Type': audioMime(filename), 'Content-Length': String(buf.length), 'Accept-Ranges': 'bytes' },
   })
+})
+
+// ── Track play-count store ─────────────────────────────────
+const PLAY_COUNTS_FILE = path.join(process.cwd(), 'data', 'play_counts.json')
+
+function loadPlayCounts(): Record<string, number> {
+  try {
+    if (fs.existsSync(PLAY_COUNTS_FILE)) return JSON.parse(fs.readFileSync(PLAY_COUNTS_FILE, 'utf-8'))
+  } catch {}
+  return {}
+}
+
+function savePlayCounts(counts: Record<string, number>) {
+  try { fs.writeFileSync(PLAY_COUNTS_FILE, JSON.stringify(counts, null, 2)) } catch {}
+}
+
+// GET /api/tracks/counts — return all play counts
+app.get('/api/tracks/counts', (c) => c.json(loadPlayCounts()))
+
+// POST /api/tracks/counts — increment play count for a track
+app.post('/api/tracks/counts', async (c) => {
+  const body = await c.req.json().catch(() => ({})) as { trackId?: string }
+  const trackId = (body.trackId ?? '').trim()
+  if (!trackId || trackId.includes('..')) return c.json({ error: 'Invalid trackId' }, 400)
+  const counts = loadPlayCounts()
+  counts[trackId] = (counts[trackId] ?? 0) + 1
+  savePlayCounts(counts)
+  return c.json({ ok: true, count: counts[trackId] })
+})
+
+// POST /api/tracks/upload — upload a new music file into the library (auth required)
+app.post('/api/tracks/upload', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  try {
+    const formData = await c.req.formData()
+    const file = formData.get('file') as File | null
+    const folder = ((formData.get('folder') as string | null) ?? '').replace(/[^a-zA-Z0-9 _-]/g, '').trim()
+    if (!file || !file.name) return c.json({ error: 'No file provided' }, 400)
+    const ext = path.extname(file.name).toLowerCase()
+    if (!AUDIO_EXTS.includes(ext)) return c.json({ error: 'Only audio files allowed (.mp3 .wav .ogg etc.)' }, 400)
+    const safeName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9 _-]/g, '_').trim() || 'track'
+    const destDir = folder ? path.join(MUSIC_DIR, folder) : MUSIC_DIR
+    if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true })
+    let destFilename = `${safeName}${ext}`
+    let destPath = path.join(destDir, destFilename)
+    if (fs.existsSync(destPath)) {
+      destFilename = `${safeName}_${Date.now()}${ext}`
+      destPath = path.join(destDir, destFilename)
+    }
+    fs.writeFileSync(destPath, Buffer.from(await file.arrayBuffer()))
+    const trackId = folder ? `${folder}/${destFilename}` : destFilename
+    return c.json({ ok: true, trackId, folder: folder || '', name: destFilename })
+  } catch (e) {
+    return c.json({ error: e instanceof Error ? e.message : String(e) }, 500)
+  }
+})
+
+// POST /api/tracks/rename-folder — rename a music folder (auth required)
+app.post('/api/tracks/rename-folder', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const body = await c.req.json().catch(() => ({})) as { from?: string; to?: string }
+  const from = (body.from ?? '').replace(/[^a-zA-Z0-9 _-]/g, '').trim()
+  const to   = (body.to   ?? '').replace(/[^a-zA-Z0-9 _-]/g, '').trim()
+  if (!from || !to) return c.json({ error: 'from and to are required' }, 400)
+  const fromPath = path.join(MUSIC_DIR, from)
+  const toPath   = path.join(MUSIC_DIR, to)
+  if (!fs.existsSync(fromPath)) return c.json({ error: 'Folder not found' }, 404)
+  if (from !== to && fs.existsSync(toPath)) return c.json({ error: 'A folder with that name already exists' }, 409)
+  if (from !== to) fs.renameSync(fromPath, toPath)
+  return c.json({ ok: true, folder: to })
 })
 
 // ── Admin: bulk upload a file into a user's data dir (authenticated) ──
