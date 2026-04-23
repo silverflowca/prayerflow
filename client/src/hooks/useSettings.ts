@@ -22,6 +22,10 @@ export interface AudioProcessing {
   hissFilter:     boolean   // high-shelf cut to remove mic hiss — default true
   hissFreq:       number    // Hz  — shelf starts here — default 8000
   hissGain:       number    // dB  — negative = cut  — default -18
+  gateEnabled:    boolean   // noise gate: silence input below threshold — default true
+  gateThreshold:  number    // 0..1 amplitude level below which gate closes — default 0.015
+  gateAttack:     number    // ms to open gate — default 10
+  gateRelease:    number    // ms to close gate after signal drops — default 200
 }
 
 export interface AppSettings {
@@ -32,15 +36,19 @@ export interface AppSettings {
 }
 
 export const AUDIO_PROCESSING_DEFAULTS: AudioProcessing = {
-  enabled:    true,
-  threshold:  -6,
-  knee:       6,
-  ratio:      2,
-  attack:     10,
-  release:    400,
-  hissFilter: true,
-  hissFreq:   8000,
-  hissGain:   -18,
+  enabled:       true,
+  threshold:     -6,
+  knee:          6,
+  ratio:         2,
+  attack:        10,
+  release:       400,
+  hissFilter:    true,
+  hissFreq:      8000,
+  hissGain:      -18,
+  gateEnabled:   true,
+  gateThreshold: 0.015,
+  gateAttack:    10,
+  gateRelease:   200,
 }
 
 const DEFAULTS: AppSettings = {

@@ -418,7 +418,6 @@ app.post('/api/transcripts/:filename', async (c) => {
 
   try {
     const audioBuffer = fs.readFileSync(filePath)
-    const ext = path.extname(filename).toLowerCase()
     const mime = audioMime(filename)
 
     const url = 'https://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&punctuate=true&utterances=true&words=true&diarize=false'
@@ -564,6 +563,251 @@ app.post('/api/admin/upload', async (c) => {
   const buf = Buffer.from(await c.req.arrayBuffer())
   fs.writeFileSync(path.join(userDir, filename), buf)
   return c.json({ ok: true, path: `${username}/${filename}`, bytes: buf.length })
+})
+
+// ────────────────────────────────────────────────────────────
+// SCRIPTURE VERSE SETS & RECORDINGS
+// Data model (per user):  data/{username}/scripture_sets.json
+//   VerseSet { id, name, verses: VerseRef[], createdAt }
+//   VerseRef { book, chapter, verse, endVerse? }
+// Per-verse recordings stored as normal recordings named:
+//   vs_{setId}_{book}_{chapter}_{verse}.{ext}
+// ────────────────────────────────────────────────────────────
+
+interface VerseRef {
+  book:      string
+  chapter:   number
+  verse:     number
+  endVerse?: number  // inclusive range end
+}
+
+interface VerseSet {
+  id:        string
+  name:      string
+  verses:    VerseRef[]
+  createdAt: string
+  updatedAt: string
+}
+
+function scriptureSetsFile(username: string) {
+  return path.join(RECORDINGS_DIR, username, 'scripture_sets.json')
+}
+
+function loadSets(username: string): VerseSet[] {
+  const f = scriptureSetsFile(username)
+  try { if (fs.existsSync(f)) return JSON.parse(fs.readFileSync(f, 'utf-8')) } catch {}
+  return []
+}
+
+function saveSets(username: string, sets: VerseSet[]) {
+  const dir = path.join(RECORDINGS_DIR, username)
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(scriptureSetsFile(username), JSON.stringify(sets, null, 2))
+}
+
+function makeVerseKey(ref: VerseRef) {
+  const end = ref.endVerse && ref.endVerse !== ref.verse ? `-${ref.endVerse}` : ''
+  return `${ref.book}_${ref.chapter}_${ref.verse}${end}`
+}
+
+// GET /api/scripture/sets — list verse sets
+app.get('/api/scripture/sets', (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  return c.json({ sets: loadSets(auth.username) })
+})
+
+// POST /api/scripture/sets — create new verse set
+app.post('/api/scripture/sets', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const { name, verses } = await c.req.json<{ name: string; verses: VerseRef[] }>()
+  if (!name?.trim()) return c.json({ error: 'Name required' }, 400)
+  const sets = loadSets(auth.username)
+  const id = `vs_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+  const now = new Date().toISOString()
+  const set: VerseSet = { id, name: name.trim(), verses: verses ?? [], createdAt: now, updatedAt: now }
+  sets.push(set)
+  saveSets(auth.username, sets)
+  return c.json({ set })
+})
+
+// PATCH /api/scripture/sets/:id — rename or update verses
+app.patch('/api/scripture/sets/:id', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const id = c.req.param('id')
+  const sets = loadSets(auth.username)
+  const idx = sets.findIndex(s => s.id === id)
+  if (idx === -1) return c.json({ error: 'Not found' }, 404)
+  const patch = await c.req.json<Partial<Pick<VerseSet, 'name' | 'verses'>>>()
+  if (patch.name !== undefined) sets[idx].name = patch.name.trim()
+  if (patch.verses !== undefined) sets[idx].verses = patch.verses
+  sets[idx].updatedAt = new Date().toISOString()
+  saveSets(auth.username, sets)
+  return c.json({ set: sets[idx] })
+})
+
+// DELETE /api/scripture/sets/:id — delete a set (and its recordings)
+app.delete('/api/scripture/sets/:id', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const id = c.req.param('id')
+  const sets = loadSets(auth.username)
+  const set = sets.find(s => s.id === id)
+  if (!set) return c.json({ error: 'Not found' }, 404)
+  // Delete all associated recordings for this set
+  const userDir = path.join(RECORDINGS_DIR, auth.username)
+  const prefix = `vs_${id}_`
+  try {
+    const files = fs.readdirSync(userDir)
+    for (const f of files) {
+      if (f.startsWith(prefix)) {
+        fs.rmSync(path.join(userDir, f), { force: true })
+        // Also delete transcript if exists
+        fs.rmSync(path.join(userDir, f + '.transcript.json'), { force: true })
+      }
+    }
+  } catch {}
+  saveSets(auth.username, sets.filter(s => s.id !== id))
+  return c.json({ ok: true })
+})
+
+// POST /api/scripture/sets/:id/recordings/:verseKey — upload verse recording
+app.post('/api/scripture/sets/:id/recordings/:verseKey', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const setId = c.req.param('id')
+  const verseKey = c.req.param('verseKey')
+  if (verseKey.includes('..') || setId.includes('..')) return c.json({ error: 'Invalid' }, 400)
+  const sets = loadSets(auth.username)
+  if (!sets.find(s => s.id === setId)) return c.json({ error: 'Set not found' }, 404)
+  const contentType = c.req.header('content-type') ?? 'audio/webm'
+  const ext = contentType.includes('mp4') ? '.mp4' : '.webm'
+  const ts = Date.now()
+  const filename = `${setId}_${verseKey}_${ts}${ext}`
+  const userDir = path.join(RECORDINGS_DIR, auth.username)
+  if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true })
+  const buf = Buffer.from(await c.req.arrayBuffer())
+  fs.writeFileSync(path.join(userDir, filename), buf)
+  return c.json({ ok: true, filename, bytes: buf.length })
+})
+
+// GET /api/scripture/sets/:id/recordings — list recordings for a set
+app.get('/api/scripture/sets/:id/recordings', (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const setId = c.req.param('id')
+  if (setId.includes('..')) return c.json({ error: 'Invalid' }, 400)
+  const userDir = path.join(RECORDINGS_DIR, auth.username)
+  const prefix = `${setId}_`
+  try {
+    const files = fs.readdirSync(userDir)
+      .filter(f => f.startsWith(prefix) && !f.endsWith('.json'))
+      .map(f => {
+        const stat = fs.statSync(path.join(userDir, f))
+        return { filename: f, size: stat.size, createdAt: stat.mtime.toISOString() }
+      })
+    return c.json({ recordings: files })
+  } catch {
+    return c.json({ recordings: [] })
+  }
+})
+
+// DELETE /api/scripture/sets/:id/recordings/:filename — delete a verse recording
+app.delete('/api/scripture/sets/:id/recordings/:filename', (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const filename = c.req.param('filename')
+  if (filename.includes('..')) return c.json({ error: 'Invalid' }, 400)
+  const userDir = path.join(RECORDINGS_DIR, auth.username)
+  const filePath = path.join(userDir, filename)
+  if (!fs.existsSync(filePath)) return c.json({ error: 'Not found' }, 404)
+  fs.rmSync(filePath, { force: true })
+  fs.rmSync(filePath + '.transcript.json', { force: true })
+  return c.json({ ok: true })
+})
+
+// GET /api/scripture/audio/:filename — stream a verse recording
+app.get('/api/scripture/audio/:filename', (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const filename = c.req.param('filename')
+  if (filename.includes('..')) return c.json({ error: 'Invalid' }, 400)
+  const filePath = path.join(RECORDINGS_DIR, auth.username, filename)
+  if (!fs.existsSync(filePath)) return c.json({ error: 'Not found' }, 404)
+  const stat = fs.statSync(filePath)
+  const total = stat.size
+  const rangeHeader = c.req.header('range')
+  const mimeType = filename.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm'
+  if (rangeHeader) {
+    const [, rangeValue] = rangeHeader.split('=')
+    const [startStr, endStr] = rangeValue.split('-')
+    const start = parseInt(startStr, 10)
+    const end = Math.min(endStr ? parseInt(endStr, 10) : start + 1024 * 512, total - 1)
+    const chunkSize = end - start + 1
+    const buf = Buffer.alloc(chunkSize)
+    const fd = fs.openSync(filePath, 'r')
+    fs.readSync(fd, buf, 0, chunkSize, start)
+    fs.closeSync(fd)
+    return new Response(buf, {
+      status: 206,
+      headers: {
+        'Content-Type': mimeType, 'Content-Range': `bytes ${start}-${end}/${total}`,
+        'Accept-Ranges': 'bytes', 'Content-Length': String(chunkSize),
+      },
+    })
+  }
+  return new Response(fs.readFileSync(filePath), {
+    headers: { 'Content-Type': mimeType, 'Content-Length': String(total), 'Accept-Ranges': 'bytes' },
+  })
+})
+
+// POST /api/scripture/transcribe/:filename — transcribe a verse recording
+app.post('/api/scripture/transcribe/:filename', async (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const filename = c.req.param('filename')
+  if (filename.includes('..')) return c.json({ error: 'Invalid' }, 400)
+  const filePath = path.join(RECORDINGS_DIR, auth.username, filename)
+  if (!fs.existsSync(filePath)) return c.json({ error: 'Not found' }, 404)
+  const txFile = filePath + '.transcript.json'
+  try {
+    const audioData = fs.readFileSync(filePath)
+    const mimeType = filename.endsWith('.mp4') ? 'audio/mp4' : 'audio/webm'
+    const dgRes = await fetch(
+      'https://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&utterances=true&punctuate=true&words=true',
+      {
+        method: 'POST',
+        headers: { 'Authorization': `Token ${DEEPGRAM_KEY}`, 'Content-Type': mimeType },
+        body: audioData,
+      }
+    )
+    if (!dgRes.ok) return c.json({ error: `Deepgram error: ${dgRes.status}` }, 502)
+    const dgData = await dgRes.json() as any
+    const alt = dgData?.results?.channels?.[0]?.alternatives?.[0]
+    if (!alt) return c.json({ error: 'No transcript' }, 502)
+    const tx = {
+      filename, transcript: alt.transcript, duration: dgData.metadata?.duration ?? 0,
+      words: alt.words ?? [], utterances: dgData.results?.utterances ?? [],
+      createdAt: new Date().toISOString(),
+    }
+    fs.writeFileSync(txFile, JSON.stringify(tx, null, 2))
+    return c.json(tx)
+  } catch (e) {
+    return c.json({ error: String(e) }, 500)
+  }
+})
+
+// GET /api/scripture/transcript/:filename — get saved transcript
+app.get('/api/scripture/transcript/:filename', (c) => {
+  const auth = requireAuth(c)
+  if (auth instanceof Response) return auth
+  const filename = c.req.param('filename')
+  if (filename.includes('..')) return c.json({ error: 'Invalid' }, 400)
+  const txFile = path.join(RECORDINGS_DIR, auth.username, filename + '.transcript.json')
+  if (!fs.existsSync(txFile)) return c.json({ error: 'Not found' }, 404)
+  return c.json(JSON.parse(fs.readFileSync(txFile, 'utf-8')))
 })
 
 // ── Serve React client (static files + SPA fallback) ──────

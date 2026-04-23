@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { LibraryTab }    from './components/LibraryTab'
 import { StudioTab }     from './components/StudioTab'
 import { RecordingsTab } from './components/RecordingsTab'
+import { ScriptureTab }  from './components/ScriptureTab'
 import { SettingsTab }   from './components/SettingsTab'
 import { LyricsView }    from './components/LyricsView'
 import { LoginPage }     from './components/LoginPage'
@@ -101,13 +102,14 @@ function ThemeSelector() {
   )
 }
 
-type Tab = 'library' | 'studio' | 'recordings' | 'settings'
+type Tab = 'library' | 'studio' | 'recordings' | 'scripture' | 'settings'
 
 const TABS: { id: Tab; icon: string; label: string }[] = [
-  { id: 'library',    icon: '🎵', label: 'Library' },
-  { id: 'studio',     icon: '🎙️', label: 'Studio'  },
-  { id: 'recordings', icon: '📼', label: 'Saved'   },
-  { id: 'settings',   icon: '⚙',  label: 'Settings'},
+  { id: 'library',    icon: '🎵', label: 'Library'   },
+  { id: 'studio',     icon: '🎙️', label: 'Studio'    },
+  { id: 'recordings', icon: '📼', label: 'Saved'     },
+  { id: 'scripture',  icon: '📖', label: 'Scripture' },
+  { id: 'settings',   icon: '⚙',  label: 'Settings'  },
 ]
 
 export default function App() {
@@ -132,6 +134,7 @@ export default function App() {
     : tab === 'library'    ? '🎵 Music Library'
     : tab === 'studio'     ? '🎙️ Studio'
     : tab === 'recordings' ? '📼 Recordings'
+    : tab === 'scripture'  ? '📖 Scripture Recording'
     : '⚙ Settings'
 
   return (
@@ -167,6 +170,12 @@ export default function App() {
               onClick={() => navigate('recordings')}
             >
               <span className="icon">📼</span> Recordings
+            </div>
+            <div
+              className={`nav-item${tab === 'scripture' && !lyricsFilename ? ' active' : ''}`}
+              onClick={() => navigate('scripture')}
+            >
+              <span className="icon">📖</span> Scripture
             </div>
           </div>
 
@@ -241,6 +250,8 @@ export default function App() {
                 />
             : tab === 'recordings'
               ? <RecordingsTab onOpenLyrics={setLyricsFilename} apiFetch={apiFetch} />
+            : tab === 'scripture'
+              ? <ScriptureTab apiFetch={apiFetch} />
               : <SettingsTab settings={settings} onUpdate={update} username={username!} onLogout={logout} />
           }
         </div>

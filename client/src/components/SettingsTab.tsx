@@ -480,6 +480,51 @@ export function SettingsTab({ settings, onUpdate, username, onLogout }: Props) {
         )}
       </GroupCard>
 
+      {/* ── Noise Gate ───────────────────────────────── */}
+      <SectionHeader title="Noise Gate" />
+      <GroupCard>
+        <Toggle
+          on={ap.gateEnabled}
+          onChange={v => updateAP({ gateEnabled: v })}
+          label="Noise Gate"
+          description="Silences the mic when your voice drops below the threshold — cuts hiss and room noise between words."
+        />
+        {ap.gateEnabled && (
+          <>
+            <Divider />
+            <SettingRow
+              label={`Threshold — ${ap.gateThreshold.toFixed(3)}`}
+              sub="Signal level to open the gate. Too low = hiss gets through. Too high = clipped words."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 36, textAlign: 'right' }}>0.001</span>
+                <input type="range" min={0.001} max={0.1} step={0.001}
+                  value={ap.gateThreshold}
+                  onChange={e => updateAP({ gateThreshold: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 36 }}>0.1</span>
+              </div>
+            </SettingRow>
+            <Divider />
+            <SettingRow
+              label={`Release — ${ap.gateRelease} ms`}
+              sub="How long the gate stays open after your voice drops. Short = tight, Long = natural tail."
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 36, textAlign: 'right' }}>20</span>
+                <input type="range" min={20} max={1000} step={10}
+                  value={ap.gateRelease}
+                  onChange={e => updateAP({ gateRelease: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', width: 36 }}>1000</span>
+              </div>
+            </SettingRow>
+          </>
+        )}
+      </GroupCard>
+
       {/* ── Storage info ─────────────────────────────── */}
       <SectionHeader title="Storage" />
       <GroupCard>

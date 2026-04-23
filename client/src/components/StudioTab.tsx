@@ -223,8 +223,9 @@ function AudioProcessingDrawer({
         <span style={{ flex: 1, textAlign: 'left', fontWeight: 500 }}>
           🎛 Audio Processing
           <span style={{ marginLeft: 6, color: 'var(--text-muted)', fontWeight: 400, fontSize: 11 }}>
-            {proc.hissFilter ? `hiss ${(proc.hissFreq/1000).toFixed(1)}k` : 'no hiss filter'}
-            {proc.enabled ? ` · comp ${proc.threshold}dB` : ' · no comp'}
+            {proc.gateEnabled ? 'gate' : 'no gate'}
+            {proc.hissFilter ? ` · hiss ${(proc.hissFreq/1000).toFixed(1)}k` : ''}
+            {proc.enabled ? ` · comp ${proc.threshold}dB` : ''}
           </span>
         </span>
         <span style={{
@@ -281,6 +282,55 @@ function AudioProcessingDrawer({
                 <input type="range" min={-40} max={0} step={1}
                   value={proc.hissGain}
                   onChange={e => onChange({ hissGain: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+            </>
+          )}
+
+          <div style={{ height: 1, background: 'var(--border)' }} />
+
+          {/* Noise gate toggle */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <span style={{ fontSize: 12, color: 'var(--text)', fontWeight: 500 }}>Noise Gate</span>
+              {proc.gateEnabled && (
+                <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                  thresh {proc.gateThreshold} · rel {proc.gateRelease}ms
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => onChange({ gateEnabled: !proc.gateEnabled })}
+              style={{
+                width: 38, height: 22, borderRadius: 11,
+                background: proc.gateEnabled ? 'var(--accent)' : 'var(--surface2)',
+                border: 'none', cursor: 'pointer', position: 'relative',
+                transition: 'background .15s', padding: 0, flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: 'absolute', top: 2, left: proc.gateEnabled ? 18 : 2,
+                width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                transition: 'left .15s cubic-bezier(.4,0,.2,1)',
+                boxShadow: '0 1px 4px rgba(0,0,0,.25)',
+              }} />
+            </button>
+          </div>
+
+          {proc.gateEnabled && (
+            <>
+              <ProcRow label="Threshold" value={proc.gateThreshold.toFixed(3)} hint="0.005 = sensitive · 0.015 = balanced · 0.05 = aggressive">
+                <input type="range" min={0.001} max={0.1} step={0.001}
+                  value={proc.gateThreshold}
+                  onChange={e => onChange({ gateThreshold: +e.target.value })}
+                  style={{ flex: 1, accentColor: 'var(--accent)' }}
+                />
+              </ProcRow>
+              <ProcRow label="Release" value={`${proc.gateRelease} ms`} hint="50 = snappy · 200 = natural · 500 = slow fade">
+                <input type="range" min={20} max={1000} step={10}
+                  value={proc.gateRelease}
+                  onChange={e => onChange({ gateRelease: +e.target.value })}
                   style={{ flex: 1, accentColor: 'var(--accent)' }}
                 />
               </ProcRow>
